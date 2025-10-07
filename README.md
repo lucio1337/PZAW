@@ -1,1 +1,1 @@
-opis projektu
+Projekt obsługujący ścieżki na serwerze HTTP
