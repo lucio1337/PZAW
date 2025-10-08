@@ -4,7 +4,6 @@ import { handlePath } from "./src/path_handlers.js";
 
 const server = createServer((req, res) => {
   const request_url = new URL(`http://${host}${req.url}`);
-  console.log(`Request: ${req.method} ${request_url.pathname}`);
 
   handlePath(request_url.pathname, req, res);
 
