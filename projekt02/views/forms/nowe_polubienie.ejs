@@ -1,0 +1,84 @@
+<% if (<%=category.id%>=="artists"){ %>
+      <form action="/moje_polubione/<%=category.id%>/new" method="POST">
+  <div>
+    <label for="artist">Wykonawca</label>
+    <input
+      type="text"
+      name="artist"
+      id="artist"
+      required
+      minlength="1"
+      maxlength="500"
+      
+    />
+  </div>
+  </div>
+  <div>
+    <label for="rating">Ocena</label>
+    <input
+      type="number"
+      name="rating"
+      id="rating"
+      required
+      minlength="1"
+      maxlength="500"
+    />
+  </div>
+  <div>
+    <button>Dodaj</button>
+  </div>
+</form>
+      <% }%>
+<% else { %>
+<form action="/moje_polubione/<%=category.id%>/new" method="POST">
+  <div>
+    <label for="title">Tytuł</label>
+    <input
+      type="text"
+      name="title"
+      id="title" <%# tytuł, wykonawcę, gatunek, ocenę %>
+      required
+      minlength="1"
+      maxlength="500"
+    />
+  </div>
+  <div>
+    <label for="artist">Wykonawca</label>
+    <input
+      type="text"
+      name="artist"
+      id="artist"
+      required
+      minlength="1"
+      maxlength="500"
+      
+    />
+  </div>
+  <div>
+    <label for="genre">Gatunek</label>
+    <input
+      type="text"
+      name="genre"
+      id="genre"
+      required
+      minlength="1"
+      maxlength="500"
+      
+    />
+  </div>
+  <div>
+    <label for="rating">Ocena</label>
+    <input
+      type="number"
+      name="rating"
+      id="rating"
+      required
+      minlength="1"
+      maxlength="500"
+    />
+  </div>
+  <div>
+    <button>Dodaj</button>
+  </div>
+</form>
+<% }%>
