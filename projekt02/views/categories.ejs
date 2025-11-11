@@ -1,10 +1,12 @@
- <%- include("head.partial.ejs") %>
+<%- include("head.partial.ejs") %>
 
 <main>
+  
   <h1><%= title %></h1>
   <ol id="categories">
+    <li><a href="/">Powrót</a></li>
     <% categories.forEach(function(category){ %>
-    <li><a href="/moje_polubione/<%=category.id%>"><%= category.name %></a></li>
+    <li><a href="/moje_polubione/<%= category.id %>"><%= category.title %></a></li>
     <% }) %>
   </ol>
 </main>

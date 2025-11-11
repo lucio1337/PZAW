@@ -1,1 +1,14 @@
-Moje ulubione utwory – użytkownik dodaje ulubione utwory (tytuł, wykonawcę, gatunek, ocenę)
+# Moja ulubiona muzyka
+
+Aplikacja webowa pozwalająca na zarządzanie ulubionymi utworami muzycznymi oraz playlistami.  
+
+Użytkownik może:  
+- Przeglądać kategorie ulubionych utworów (artyści, albumy, utwory itp.)  
+- Przeglądać karty w każdej kategorii (tytuł, wykonawca, gatunek, ocena)  
+- Usuwać istniejące wpisy  
+- Tworzyć playlisty z wybranych utworów  
+
+
+# Odpalanie
+ - Musisz być w folderze projekt02 i użyć komendy: node index.js
+ - Aplikacja powinna być pod adresem http://localhost:8000

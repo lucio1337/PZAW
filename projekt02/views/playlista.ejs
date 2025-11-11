@@ -1,0 +1,52 @@
+<%- include("head.partial.ejs") %>
+
+<main>
+  <h1><%= title %></h1>
+  <a href="/">Powrót do wszystkich kategorii</a>
+
+  <% if (errors.length > 0) { %>
+    <ul class="errors">
+      <% errors.forEach(err => { %>
+        <li><%= err %></li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <form action="/playlista" method="POST">
+    <div>
+      <label for="name">Nazwa playlisty:</label>
+      <input type="text" id="name" name="name" value="<%= name %>">
+    </div>
+
+    <div>
+      <strong>Wybierz utwory:</strong><br>
+      <% utwory.forEach(song => { %>
+        <label>
+          <input type="checkbox" name="utwory" value="<%= song.tytuł %>" 
+            <% if(selected.includes(song.tytuł)) { %>checked<% } %> >
+          <%= song.tytuł %> - <%= song.wykonawca %> (<%= song.ocena %>)
+        </label><br>
+      <% }) %>
+    </div>
+
+    <button>Dodaj playlistę</button>
+  </form>
+
+  <% if (playlists.length > 0) { %>
+    <h2>Twoje playlisty</h2>
+    <ul>
+      <% playlists.forEach(pl => { %>
+        <li>
+          <strong><%= pl.name %></strong>
+          <ul>
+            <% pl.songs.forEach(s => { %>
+              <li><%= s.tytuł %> - <%= s.wykonawca %> (<%= s.ocena %>)</li>
+            <% }) %>
+          </ul>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</main>
+
+<%- include("foot.partial.ejs") %>

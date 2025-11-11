@@ -2,15 +2,67 @@
 
 <main>
   <h1><%= title %></h1>
-  <ul id="things">
-    <% category.things.forEach(function(thing){ %>
-    <li><%= thing.artist %>, <%= thing.title %>, <%= thing.genre %>, <%= thing.rating %></li>
-    <% }) %>
-  </ul>
+  <a href="/">Powrót</a>
+
   <div>
-    <h3>Nowe do polubienia</h3>
+    <strong>Sortuj według oceny:</strong>
+    <a href="?sort=lowest">Od najgorszej</a> |
+    <a href="?sort=highest">Od najlepszej</a> |
+    <a href="/moje_polubione/<%= category.id %>">Resetuj</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <% if (category.requiredFields.includes("tytuł")) { %>
+          <th>Tytuł</th>
+        <% } %>
+        <% if (category.requiredFields.includes("wykonawca")) { %>
+          <th>Wykonawca</th>
+        <% } %>
+        <% if (category.requiredFields.includes("gatunek")) { %>
+          <th>Gatunek</th>
+        <% } %>
+        <% if (category.requiredFields.includes("ocena")) { %>
+          <th>Ocena</th>
+        <% } %>
+        <th>Akcje</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% category.cards.forEach(function(card, index){ %>
+        <tr>
+          <% if (card.tytuł) { %>
+            <td><%= card.tytuł %></td>
+          <% } %>
+          <% if (card.wykonawca) { %>
+            <td><%= card.wykonawca %></td>
+          <% } %>
+          <% if (card.gatunek) { %>
+            <td><%= card.gatunek %></td>
+          <% } %>
+          <% if (card.ocena) { %>
+            <td><%= card.ocena %></td>
+          <% } %>
+
+          <td>
+            <form action="/moje_polubione/<%= category.id %>/delete/<%= index %>" method="POST" >
+              <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
+                Usuń
+              </button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div >
+    <h3>Nowe polubienie</h3>
     <%- include("forms/nowe_polubienie.ejs") %>
   </div>
 </main>
 
 <%- include("foot.partial.ejs") %>
+

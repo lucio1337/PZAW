@@ -1,7 +1,7 @@
 {
   "name": "projekt02",
   "version": "1.0.0",
-  "description": "",
+  "description": "Moje ulubione utwory – użytkownik dodaje ulubione utwory (tytuł, wykonawcę, gatunek, ocenę)",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -11,6 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ejs": "^3.1.10",
     "express": "^5.1.0"
-  }
+  },
+  "devDependencies": {}
 }
