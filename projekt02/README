@@ -10,5 +10,7 @@ Użytkownik może:
 
 
 # Odpalanie
+ - W folderze projekt02 użyj komendy npm install
  - Musisz być w folderze projekt02 i użyć komendy: node index.js
  - Aplikacja powinna być pod adresem http://localhost:8000
+ - Powinny się wyświetlać wszystkie możliwe opcje do edycji
