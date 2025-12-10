@@ -216,7 +216,7 @@ app.post("/moje_polubione/:category_id/delete/:idx", (req, res) => {
   const category = fav.getCategory(category_id);
   if (isNaN(index) || index < 0 || index >= category.cards.length) return res.sendStatus(400);
 
-  category.cards.splice(index, 1);
+  fav.deleteCard(category_id, index);
   res.redirect(`/moje_polubione/${category_id}`);
 });
 
