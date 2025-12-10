@@ -1,0 +1,112 @@
+<%- include("head.partial.ejs") %>
+
+<main>
+  <h1><%= title %></h1>
+
+  <% if (categories.length === 0) { %>
+    <p>Nie masz jeszcze żadnych kategorii.</p>
+  <% } else { %>
+    <ul>
+      <% categories.forEach(cat => { %>
+        <li><a href="/moje_polubione/<%= cat.id %>"><%= cat.title %></a></li>
+      <% }) %>
+      <li><a href="/playlista">tworzenie nowej playlisty</a></li>
+    </ul>
+  <% } %>
+
+  
+  <% categories.forEach(category => { %>
+    <% if (category.cards && category.cards.length > 0) { %>
+      <h2><%= category.title %></h2>
+
+      <div>
+        <strong>Sortuj według oceny:</strong>
+        <a href="/?sort=lowest&category=<%= category.id %>">Od najgorszej</a> |
+        <a href="/?sort=highest&category=<%= category.id %>">Od najlepszej</a> |
+        <a href="/">Resetuj</a>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <% if (category.requiredFields.includes("tytuł")) { %>
+              <th>Tytuł</th>
+            <% } %>
+            <% if (category.requiredFields.includes("wykonawca")) { %>
+              <th>Wykonawca</th>
+            <% } %>
+            <% if (category.requiredFields.includes("gatunek")) { %>
+              <th>Gatunek</th>
+            <% } %>
+            <% if (category.requiredFields.includes("ocena")) { %>
+              <th>Ocena</th>
+            <% } %>
+            <th>Akcje</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% category.cards.forEach(function(card, index){ %>
+            <tr>
+              <% if (card.tytuł) { %>
+                <td><%= card.tytuł %></td>
+              <% } %>
+              <% if (card.wykonawca) { %>
+                <td><%= card.wykonawca %></td>
+              <% } %>
+              <% if (card.gatunek) { %>
+                <td><%= card.gatunek %></td>
+              <% } %>
+              <% if (card.ocena) { %>
+                <td><%= card.ocena %></td>
+              <% } %>
+
+              <td>
+                <form action="/moje_polubione/<%= category.id %>/delete/<%= index %>" method="POST">
+                  <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
+                    Usuń
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <br>
+    <% } %>
+  <% }) %>
+
+  <% if (playlists && playlists.length > 0) { %>
+    <h2>Playlisty</h2>
+    <% playlists.forEach(playlist => { %>
+      <h3><%= playlist.name %></h3>
+      <% if (playlist.songs && playlist.songs.length > 0) { %>
+        <table>
+          <thead>
+            <tr>
+              <th>Tytuł</th>
+              <th>Wykonawca</th>
+              <th>Gatunek</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% playlist.songs.forEach(song => { %>
+              <tr>
+                <td><%= song.tytuł %></td>
+                <td><%= song.wykonawca %></td>
+                <td><%= song.gatunek || "-" %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <p>Brak utworów w tej playliście.</p>
+      <% } %>
+      <br>
+    <% }) %>
+  <% } %>
+  
+</main>
+
+<%- include("foot.partial.ejs") %>
+

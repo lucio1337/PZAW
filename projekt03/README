@@ -7,8 +7,11 @@ Użytkownik może:
 - Przeglądać karty w każdej kategorii (tytuł, wykonawca, gatunek, ocena)  
 - Usuwać istniejące wpisy  
 - Tworzyć playlisty z wybranych utworów  
+- Usuwać i edytować playlisty 
 
 
 # Odpalanie
- - Musisz być w folderze projekt02 i użyć komendy: node index.js
+ - Musisz być w folderze projekt03
+ - Użyj komendy: npm instal
+ - Użyć komendy: node index.js
  - Aplikacja powinna być pod adresem http://localhost:8000

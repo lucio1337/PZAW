@@ -1,0 +1,40 @@
+<%- include("head.partial.ejs") %>
+
+<main>
+  <h1><%= title %></h1>
+  <a href="/playlista">Powrót do wszystkich playlist</a>
+
+  <% if (errors && errors.length > 0) { %>
+    <ul class="errors">
+      <% errors.forEach(err => { %>
+        <li><%= err %></li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <form action="/playlista/edit/<%= idx %>" method="POST">
+    <div>
+      <label for="name">Nazwa playlisty:</label>
+      <input type="text" id="name" name="name" value="<%= playlist.name %>">
+    </div>
+
+    <div>
+      <strong>Wybierz utwory:</strong><br>
+      <% utwory.forEach(song => { %>
+        <label>
+          <input type="checkbox" name="utwory" value="<%= song.tytuł %>"
+            <% if(selected.includes(song.tytuł)) { %>checked<% } %> >
+          <%= song.tytuł %> - <%= song.wykonawca %> (<%= song.ocena %>)
+        </label><br>
+      <% }) %>
+    </div>
+
+    <button>Zapisz zmiany</button>
+  </form>
+
+  <form action="/playlista/delete/<%= idx %>" method="POST">
+    <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
+  </form>
+</main>
+
+<%- include("foot.partial.ejs") %>

@@ -1,5 +1,5 @@
 {
-  "name": "projekt02",
+  "name": "projekt03",
   "version": "1.0.0",
   "description": "Moje ulubione utwory – użytkownik dodaje ulubione utwory (tytuł, wykonawcę, gatunek, ocenę)",
   "main": "index.js",
@@ -15,5 +15,4 @@
     "express": "^5.1.0"
   },
   "devDependencies": {}
-  
 }
