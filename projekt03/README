@@ -13,7 +13,7 @@ Użytkownik może:
 # Odpalanie
  - Musisz być w folderze projekt03
  - Użyj komendy: npm install
- - Użyj komendy: npm better-sqlite3
+ - Użyj komendy: npm install better-sqlite3
  - Jeżeli chce się użyć seedera to użyj komendy: node seeder.js
  - Użyć komendy: node index.js
  - Aplikacja powinna być pod adresem http://localhost:8000
