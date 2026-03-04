@@ -1,0 +1,15 @@
+<form action="/moje_polubione/<%= category.id %>/new" method="POST">
+  <% category.requiredFields.forEach(function(field){ %>
+    <div>
+      <label for="card_<%= field %>"><%= field.charAt(0).toUpperCase() + field.slice(1) %></label>
+      <% if (field === "ocena") { %>
+        <input type="number" name="<%= field %>" id="card_<%= field %>" required min="1" max="10" step="0.1"
+          
+      <% } else { %>
+        <input type="text" name="<%= field %>" id="card_<%= field %>" required minlength="1" maxlength="500"
+          
+      <% } %>
+    </div>
+  <% }) %>
+  <button>Dodaj</button>
+</form>

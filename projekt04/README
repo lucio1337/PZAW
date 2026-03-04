@@ -1,0 +1,19 @@
+# Moja ulubiona muzyka
+
+Aplikacja webowa pozwalająca na zarządzanie ulubionymi utworami muzycznymi oraz playlistami.  
+
+Użytkownik może:  
+- Przeglądać kategorie ulubionych utworów (artyści, albumy, utwory itp.)  
+- Przeglądać karty w każdej kategorii (tytuł, wykonawca, gatunek, ocena)  
+- Usuwać istniejące wpisy  
+- Tworzyć playlisty z wybranych utworów  
+- Usuwać i edytować playlisty 
+
+
+# Odpalanie
+ - Musisz być w folderze projekt03
+ - Użyj komendy: npm install
+ - Użyj komendy: npm install better-sqlite3
+ - Jeżeli chce się użyć seedera to użyj komendy: node seeder.js
+ - Użyć komendy: node index.js
+ - Aplikacja powinna być pod adresem http://localhost:8000

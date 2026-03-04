@@ -5,6 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "dev": "node --watch --env-file .env ./index.js",
+    "generate_env": "bash utils/generate_env.sh > utils/.env",
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed": "node seeder.js"
   },
