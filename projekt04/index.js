@@ -1,5 +1,8 @@
 import express from "express";
 import crypto from "crypto";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import fav from "./models/favourite.js";
 import db from "./database.js";
 
@@ -11,6 +14,18 @@ app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
 const sessions = new Map();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pepperPath = join(__dirname, "auth_pepper.txt");
+
+let PEPPER;
+if (fs.existsSync(pepperPath)) {
+  PEPPER = fs.readFileSync(pepperPath, "utf-8").trim();
+} else {
+  PEPPER = crypto.randomBytes(32).toString("base64");
+  fs.writeFileSync(pepperPath, PEPPER);
+}
 
 function parseCookies(cookieHeader) {
   const cookies = {};
@@ -36,6 +51,30 @@ function setSessionCookie(res, sessionId) {
   res.setHeader("Set-Cookie", `sessionId=${sessionId}; HttpOnly; Path=/`);
 }
 
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto
+    .createHash("sha256")
+    .update(salt + password + PEPPER)
+    .digest("hex");
+
+  return `${salt}$${hash}`;
+}
+
+function verifyPassword(password, stored) {
+  const parts = stored.split("$");
+  if (parts.length !== 2) return false;
+
+  const [salt, hash] = parts;
+  const checkHash = crypto
+    .createHash("sha256")
+    .update(salt + password + PEPPER)
+    .digest("hex");
+    
+
+  return checkHash === hash;
+}
+
 function findUserByUsername(username) {
   return db
     .prepare("SELECT id, username, password FROM users WHERE username = ?")
@@ -43,11 +82,12 @@ function findUserByUsername(username) {
 }
 
 function createUser(username, password) {
+  const hashedPassword = hashPassword(password);
   const info = db
     .prepare("INSERT INTO users (username, password) VALUES (?, ?)")
-    .run(username, password);
+    .run(username, hashedPassword);
 
-  return { id: info.lastInsertRowid, username, password };
+  return { id: info.lastInsertRowid, username };
 }
 
 app.use((req, res, next) => {
@@ -161,7 +201,7 @@ app.post("/logowanie", (req, res) => {
 
   if (errors.length === 0) {
     const row = findUserByUsername(username);
-    if (!row || row.password !== password) {
+    if (!row || !verifyPassword(password, row.password)) {
       errors.push("Nieprawidłowa nazwa użytkownika lub hasło");
     } else {
       user = row;
