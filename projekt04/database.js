@@ -42,6 +42,14 @@ export function initializeDatabase() {
     )
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL
+    )
+  `);
+
   const result = db.prepare('SELECT COUNT(*) as count FROM categories').get();
   
   if (result.count === 0) {

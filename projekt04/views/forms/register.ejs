@@ -1,0 +1,25 @@
+<form action="/rejestracja" method="POST">
+  <div>
+    <label for="username">Nazwa użytkownika</label>
+    <input
+      type="text"
+      id="username"
+      name="username"
+      value="<%= username || '' %>"
+      minlength="5"
+    />
+  </div>
+
+  <div>
+    <label for="password">Hasło</label>
+    <input
+      type="password"
+      id="password"
+      name="password"
+      minlength="8"
+    />
+  </div>
+
+  <button type="submit">Załóż konto</button>
+</form>
+

@@ -7,3 +7,16 @@
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
+    <header>
+      <nav>
+        <% if (currentUser) { %>
+          <span>Zalogowany jako <strong><%= currentUser.username %></strong></span>
+          <form action="/logout" method="POST" style="display: inline;">
+            <button type="submit">Wyloguj</button>
+          </form>
+        <% } else { %>
+          <a href="/rejestracja">Rejestracja</a>
+          <a href="/logowanie">Logowanie</a>
+        <% } %>
+      </nav>
+    </header>

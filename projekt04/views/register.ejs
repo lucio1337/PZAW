@@ -1,0 +1,18 @@
+<%- include("head.partial.ejs") %>
+
+<main>
+  <h1><%= title %></h1>
+
+  <% if (errors && errors.length > 0) { %>
+    <ul class="errors">
+      <% errors.forEach(function(error) { %>
+        <li><%= error %></li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <%- include("forms/register.ejs") %>
+</main>
+
+<%- include("foot.partial.ejs") %>
+

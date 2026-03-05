@@ -1,19 +1,52 @@
-# Moja ulubiona muzyka
+1. Temat projektu
 
-Aplikacja webowa pozwalająca na zarządzanie ulubionymi utworami muzycznymi oraz playlistami.  
+Rozwój własnej aplikacji internetowej przechowującej informacje w bazie danych.
+Temat projektu należy wybrać na podstawie własnych zainteresowań i możliwości.
+Poza obowiązującymi regulacjami prawnymi w Polsce tematyka jest dowolna.
 
-Użytkownik może:  
-- Przeglądać kategorie ulubionych utworów (artyści, albumy, utwory itp.)  
-- Przeglądać karty w każdej kategorii (tytuł, wykonawca, gatunek, ocena)  
-- Usuwać istniejące wpisy  
-- Tworzyć playlisty z wybranych utworów  
-- Usuwać i edytować playlisty 
+2. Minimalny zakres projektu
 
+Projekt musi korzystać z frameworka Express.
 
-# Odpalanie
- - Musisz być w folderze projekt03
- - Użyj komendy: npm install
- - Użyj komendy: npm install better-sqlite3
- - Jeżeli chce się użyć seedera to użyj komendy: node seeder.js
- - Użyć komendy: node index.js
- - Aplikacja powinna być pod adresem http://localhost:8000
+Aplikacja będzie obsługiwać przynajmniej 3 kombinacje ścieżka/metoda.
+
+Obsługa [GET /] jest obowiązkowa.
+
+Aplikacja będzie umożliwiać użytkownikowi wprowadzanie danych przy pomocy formularzy HTML i odbierać dane w żądaniach HTTP POST.
+
+Dane wprowadzone do aplikacji będą przechowywane w sposób nieulotny w bazie danych.
+
+Aplikacja od strony doświadczenia deweloperskiego umożliwi wypełnienie bazy danych danymi testowymi.
+
+Aplikacja umożliwi użytkownikowi stworzenie konta i zalogowanie się do niej, a także wylogowanie.
+
+Aplikacja będzie wspierać logowanie przy pomocy kombinacji unikatowy login + hasło.
+
+„Salted hash” hasła będzie przechowywany w bazie danych.
+
+Część funkcjonalności aplikacji będzie dostępna tylko dla zalogowanych użytkowników.
+
+Aplikacja utworzy konto administratora pozwalające na edycję wszystkich treści na stronie.
+
+Użytkownicy niebędący administratorami będą mieli dostęp do edycji danych wprowadzonych przez siebie.
+
+Użytkownicy niebędący administratorami nie będą mieli dostępu do edycji danych wprowadzonych przez innych użytkowników.
+
+README projektu będzie opisywać konfigurację i użycie aplikacji.
+
+3. Termin oddania projektu
+
+Projekt zostanie oddany do końca dnia 25.03.2026.
+Oddanie projektu po terminie może skutkować obniżeniem oceny.
+
+4. Forma oddania projektu
+
+Projekt zostanie dostarczony w formie folderu o nazwie „projekt04” umieszczonego w publicznym repozytorium dostępnym na jednej z popularnych stron obsługujących repozytoria git (GitHub, GitLab).
+
+5. Kryteria oceny
+
+Aplikacja zachowuje się zgodnie z wymaganiami.
+
+README opisuje uruchomienie i konfigurację projektu.
+
+Historia commitów w GitHub pokazująca liniowy rozwój aplikacji.

@@ -1,29 +1,68 @@
 import express from "express";
+import crypto from "crypto";
 import fav from "./models/favourite.js";
-import cookieParser from "cookie-parser";
+import db from "./database.js";
 
+const port = 8000;
 const app = express();
-
-
-const port = process.env.PORT || 8000;
-
-const SECRET = process.env.SECRET;
-
-if (SECRET == null) {
-  console.error(
-    "SECRET environment variable missing. Please create an env file or provide SECRET via environment variables.",
-  );
-  process.exit(1);
-}
-
-
-app.use(cookieParser(SECRET));
-
-
 
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
+
+const sessions = new Map();
+
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (!cookieHeader) return cookies;
+
+  cookieHeader.split(";").forEach(cookie => {
+    const [name, ...rest] = cookie.split("=");
+    const value = rest.join("=");
+    if (!name) return;
+    cookies[name.trim()] = decodeURIComponent(value || "");
+  });
+
+  return cookies;
+}
+
+function createSession(user) {
+  const sessionId = crypto.randomBytes(16).toString("hex");
+  sessions.set(sessionId, { id: user.id, username: user.username });
+  return sessionId;
+}
+
+function setSessionCookie(res, sessionId) {
+  res.setHeader("Set-Cookie", `sessionId=${sessionId}; HttpOnly; Path=/`);
+}
+
+function findUserByUsername(username) {
+  return db
+    .prepare("SELECT id, username, password FROM users WHERE username = ?")
+    .get(username);
+}
+
+function createUser(username, password) {
+  const info = db
+    .prepare("INSERT INTO users (username, password) VALUES (?, ?)")
+    .run(username, password);
+
+  return { id: info.lastInsertRowid, username, password };
+}
+
+app.use((req, res, next) => {
+  const cookies = parseCookies(req.headers.cookie || "");
+  const sessionId = cookies.sessionId;
+
+  if (sessionId && sessions.has(sessionId)) {
+    req.user = sessions.get(sessionId);
+  } else {
+    req.user = null;
+  }
+
+  res.locals.currentUser = req.user;
+  next();
+});
 
 
 app.get("/", (req, res) => {
@@ -50,6 +89,113 @@ app.get("/", (req, res) => {
     categories,
     playlists: fav.getPlaylists()
   });
+});
+
+app.get("/rejestracja", (req, res) => {
+  if (req.user) return res.redirect("/");
+
+  res.render("register", {
+    title: "Rejestracja",
+    errors: [],
+    username: ""
+  });
+});
+
+app.post("/rejestracja", (req, res) => {
+  const { username, password } = req.body;
+  const errors = [];
+
+  if (!username || username.trim() === "") {
+    errors.push("Podaj nazwę użytkownika");
+  }
+
+  if (!password || password.trim() === "") {
+    errors.push("Podaj hasło");
+  }
+
+  if (errors.length === 0) {
+    const existing = findUserByUsername(username);
+    if (existing) {
+      errors.push("Użytkownik o takiej nazwie już istnieje");
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).render("register", {
+      title: "Rejestracja",
+      errors,
+      username: username || ""
+    });
+  }
+
+  const user = createUser(username, password);
+  const sessionId = createSession(user);
+  setSessionCookie(res, sessionId);
+
+  res.redirect("/");
+});
+
+app.get("/logowanie", (req, res) => {
+  if (req.user) return res.redirect("/");
+
+  res.render("login", {
+    title: "Logowanie",
+    errors: [],
+    username: ""
+  });
+});
+
+app.post("/logowanie", (req, res) => {
+  const { username, password } = req.body;
+  const errors = [];
+
+  if (!username || username.trim() === "") {
+    errors.push("Podaj nazwę użytkownika");
+  }
+
+  if (!password || password.trim() === "") {
+    errors.push("Podaj hasło");
+  }
+
+  let user = null;
+
+  if (errors.length === 0) {
+    const row = findUserByUsername(username);
+    if (!row || row.password !== password) {
+      errors.push("Nieprawidłowa nazwa użytkownika lub hasło");
+    } else {
+      user = row;
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).render("login", {
+      title: "Logowanie",
+      errors,
+      username: username || ""
+    });
+  }
+
+  const sessionId = createSession(user);
+  setSessionCookie(res, sessionId);
+
+  res.redirect("/");
+});
+
+app.post("/logout", (req, res) => {
+  const cookies = parseCookies(req.headers.cookie || "");
+  const sessionId = cookies.sessionId;
+
+  if (sessionId && sessions.has(sessionId)) {
+    sessions.delete(sessionId);
+  }
+
+  res.setHeader(
+    "Set-Cookie",
+    "sessionId=; HttpOnly; Path=/; Max-Age=0"
+  );
+
+  res.redirect("/");
 });
 
 
