@@ -2,18 +2,29 @@
 
 Aplikacja webowa pozwalająca na zarządzanie ulubionymi utworami muzycznymi oraz playlistami.  
 
-Użytkownik może:  
+Zalogowany użytkownik może:  
 - Przeglądać kategorie ulubionych utworów (artyści, albumy, utwory itp.)  
 - Przeglądać karty w każdej kategorii (tytuł, wykonawca, gatunek, ocena)  
 - Usuwać istniejące wpisy  
 - Tworzyć playlisty z wybranych utworów  
 - Usuwać i edytować playlisty 
+- Oglądać i edytować tylko swoje wpisy
+
+Niezalogowany użytkownik ma tylko opcje stworzenia konta lub zalogowania.
+
+Admin może:
+- Przeglądać wpisy wszystkich użytkowników
+- Zarządzać wpisami wszystkich użytkowników
+- Zobaczyć jaki użytkownik stworzył wpis
+- Również może tworzyć wpisy jak zwykły zaalogowany użytkownik
 
 
 # Odpalanie
- - Musisz być w folderze projekt03
+ - Musisz być w folderze projekt04
  - Użyj komendy: npm install
  - Użyj komendy: npm install better-sqlite3
- - Jeżeli chce się użyć seedera to użyj komendy: node seeder.js
+ - Jeżeli chce się użyć seedera to użyj komendy: npm run seed
+ - Jeżeli chce się używać konta admina użyj komendy: npm run create-admin
+ - !UWAGA! Jeżeli zamierzasz tworzyć inne konta oraz również chcesz używać konta admina ważne jest stworzenie admina przed jakim kolwiek innym użytkownikiem
  - Użyć komendy: node index.js
  - Aplikacja powinna być pod adresem http://localhost:8000

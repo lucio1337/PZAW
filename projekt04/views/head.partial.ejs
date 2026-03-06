@@ -3,12 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Strona projektu muzycznego">
+    <meta name="keywords" content="javascript, music">
+    <meta name="author" content="Lukasz Furmann">
     <title><%= title %></title>
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
     <header>
       <nav>
+        
         <% if (currentUser) { %>
           <span>Zalogowany jako <strong><%= currentUser.username %></strong><% if (currentUser.isAdmin) { %> <em>(Admin)</em><% } %></span>
           <form action="/logout" method="POST" style="display: inline;">

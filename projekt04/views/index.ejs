@@ -4,7 +4,7 @@
   <h1><%= title %></h1>
 
   <% if (!locals.currentUser) { %>
-    <p>Zaloguj się, aby dodawać i przeglądać swoje ulubione albumy, utwory, artyści i playlisty.</p>
+    <p><a href="/logowanie">Zaloguj się</a>, aby dodawać i przeglądać swoje ulubione albumy, utwory, artystów i playlisty.</p>
   <% } %>
 
   <% if (categories.length === 0) { %>
@@ -25,8 +25,8 @@
 
       <div>
         <strong>Sortuj według oceny:</strong>
-        <a href="/?sort=lowest&category=<%= category.id %>">Od najgorszej</a> |
-        <a href="/?sort=highest&category=<%= category.id %>">Od najlepszej</a> |
+        <a href="/?sort=lowest&category=<%= category.id %>">Od najgorszej |</a>
+        <a href="/?sort=highest&category=<%= category.id %>">Od najlepszej |</a>
         <a href="/">Resetuj</a>
       </div>
 
@@ -92,7 +92,7 @@
   <% if (playlists && playlists.length > 0) { %>
     <h2>Playlisty</h2>
     <% playlists.forEach((playlist, plIdx) => { %>
-      <h3><%= playlist.name %><% if (locals.currentUser && locals.currentUser.isAdmin && playlist.ownerName) { %> <span style="font-weight:normal;color:#666;">(użytkownik: <%= playlist.ownerName %>)</span><% } %></h3>
+      <h3><%= playlist.name %><% if (locals.currentUser && locals.currentUser.isAdmin && playlist.ownerName) { %> <span style="font-weight:normal;color:#a7a7a7;">(użytkownik: <%= playlist.ownerName %>)</span><% } %></h3>
       <% if (playlist.songs && playlist.songs.length > 0) { %>
         <table>
           <thead>

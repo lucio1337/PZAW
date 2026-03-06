@@ -1,13 +1,14 @@
 <%- include("head.partial.ejs") %>
 
 <main>
-  <h1><%= title %></h1>
   <a href="/">Powrót</a>
+  <h1><%= title %></h1>
+  
 
   <div>
     <strong>Sortuj według oceny:</strong>
-    <a href="?sort=lowest">Od najgorszej</a> |
-    <a href="?sort=highest">Od najlepszej</a> |
+    <a href="?sort=lowest">Od najgorszej |</a>
+    <a href="?sort=highest">Od najlepszej |</a>
     <a href="/moje_polubione/<%= category.id %>">Resetuj</a>
   </div>
 

@@ -40,27 +40,29 @@
 
 
   <% if (playlists.length > 0) { %>
+    <br><br>
     <h2>Twoje playlisty</h2>
     <ul>
       <% playlists.forEach((pl, idx) => { %>
         <li>
-          <strong><%= pl.name %></strong><% if (locals.currentUser && locals.currentUser.isAdmin && pl.ownerName) { %> <span style="font-weight:normal;color:#666;">(użytkownik: <%= pl.ownerName %>)</span><% } %>
+          <strong><%= pl.name %></strong><% if (locals.currentUser && locals.currentUser.isAdmin && pl.ownerName) { %> <span>(użytkownik: <%= pl.ownerName %>)</span><% } %>
 
- 
-          <a href="/playlista/edit/<%= idx %>">
-            <button type="button">Edytuj</button>
-          </a>
 
-  
-          <form action="/playlista/delete/<%= idx %>" method="POST" >
-            <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
-          </form>
+          
 
           <ul>
             <% pl.songs.forEach(s => { %>
               <li><%= s.tytuł %> - <%= s.wykonawca %> (<%= s.ocena %>)</li>
             <% }) %>
-          </ul>
+          </ul><br>
+          <a href="/playlista/edit/<%= idx %>">
+            <button type="button">Edytuj</button>
+          </a>
+
+  <br>
+          <form action="/playlista/delete/<%= idx %>" method="POST" >
+            <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń</button>
+          </form>
         </li>
       <% }) %>
     </ul>

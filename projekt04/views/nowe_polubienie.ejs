@@ -1,7 +1,9 @@
 <%- include("head.partial.ejs") %>
 
 <main>
+  <a href="javascript:history.back()" >Powrót</a>
   <h1><%= title %></h1>
+  
   <ul id="errors">
     <% errors.forEach(function(error){ %>
     <li><%= error %></li>
