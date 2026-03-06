@@ -3,6 +3,10 @@
 <main>
   <h1><%= title %></h1>
 
+  <% if (!locals.currentUser) { %>
+    <p>Zaloguj się, aby dodawać i przeglądać swoje ulubione albumy, utwory, artyści i playlisty.</p>
+  <% } %>
+
   <% if (categories.length === 0) { %>
     <p>Nie masz jeszcze żadnych kategorii.</p>
   <% } else { %>
@@ -41,7 +45,11 @@
             <% if (category.requiredFields.includes("ocena")) { %>
               <th>Ocena</th>
             <% } %>
-            <th>Akcje</th>
+            <% if (locals.currentUser && locals.currentUser.isAdmin) { %>
+              <th>Właściciel</th>
+            <% } %>
+
+              <th>Akcja</th>
           </tr>
         </thead>
 
@@ -60,13 +68,18 @@
               <% if (card.ocena) { %>
                 <td><%= card.ocena %></td>
               <% } %>
+              <% if (locals.currentUser && locals.currentUser.isAdmin) { %>
+                <td><%= card.ownerName || '—' %></td>
+              <% } %>
 
               <td>
-                <form action="/moje_polubione/<%= category.id %>/delete/<%= index %>" method="POST">
-                  <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
-                    Usuń
-                  </button>
-                </form>
+                <% if (locals.currentUser || locals.currentUser.isAdmin) { %>
+                  <form action="/moje_polubione/<%= category.id %>/delete/<%= index %>" method="POST">
+                    <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
+                      Usuń
+                    </button>
+                  </form>
+                <% } %>
               </td>
             </tr>
           <% }) %>
@@ -78,13 +91,13 @@
 
   <% if (playlists && playlists.length > 0) { %>
     <h2>Playlisty</h2>
-    <% playlists.forEach(playlist => { %>
-      <h3><%= playlist.name %></h3>
+    <% playlists.forEach((playlist, plIdx) => { %>
+      <h3><%= playlist.name %><% if (locals.currentUser && locals.currentUser.isAdmin && playlist.ownerName) { %> <span style="font-weight:normal;color:#666;">(użytkownik: <%= playlist.ownerName %>)</span><% } %></h3>
       <% if (playlist.songs && playlist.songs.length > 0) { %>
         <table>
           <thead>
             <tr>
-              <th>Tytuł</th>
+              <th>Tytuł utworu</th>
               <th>Wykonawca</th>
               <th>Gatunek</th>
             </tr>
@@ -102,6 +115,11 @@
       <% } else { %>
         <p>Brak utworów w tej playliście.</p>
       <% } %>
+      <% if (locals.currentUser) { %>
+        <form action="/playlista/delete/<%= plIdx %>" method="POST" style="margin-top:0.5em;">
+          <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
+        </form>
+      <% } %>
       <br>
     <% }) %>
   <% } %>
@@ -109,4 +127,3 @@
 </main>
 
 <%- include("foot.partial.ejs") %>
-

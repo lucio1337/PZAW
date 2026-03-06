@@ -3,6 +3,9 @@
 <main>
   <h1><%= title %></h1>
   <a href="/playlista">Powrót do wszystkich playlist</a>
+  <% if (locals.currentUser && locals.currentUser.isAdmin && playlist.ownerName) { %>
+    <p style="color:#666;">Playlista użytkownika: <strong><%= playlist.ownerName %></strong></p>
+  <% } %>
 
   <% if (errors && errors.length > 0) { %>
     <ul class="errors">

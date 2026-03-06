@@ -24,14 +24,16 @@ export function initializeDatabase() {
       tytuł TEXT,
       wykonawca TEXT,
       gatunek TEXT,
-      ocena TEXT NOT NULL
+      ocena TEXT NOT NULL,
+      user_id INTEGER
     )
   `);
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS playlists (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL
+      name TEXT NOT NULL,
+      user_id INTEGER
     )
   `);
 
@@ -42,14 +44,15 @@ export function initializeDatabase() {
     )
   `);
 
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      is_admin INTEGER NOT NULL DEFAULT 0
     )
   `);
-
   const result = db.prepare('SELECT COUNT(*) as count FROM categories').get();
   
   if (result.count === 0) {

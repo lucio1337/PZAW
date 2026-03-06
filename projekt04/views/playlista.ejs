@@ -4,6 +4,10 @@
   <h1><%= title %></h1>
   <a href="/">Powrót do wszystkich kategorii</a>
 
+  <% if (!locals.currentUser) { %>
+    <p><a href="/logowanie">Zaloguj się</a>, aby tworzyć i zarządzać playlistami.</p>
+  <% } %>
+
   <% if (errors && errors.length > 0) { %>
     <ul class="errors">
       <% errors.forEach(err => { %>
@@ -12,7 +16,7 @@
     </ul>
   <% } %>
 
- 
+  <% if (locals.currentUser) { %>
   <form action="/playlista" method="POST">
     <div>
       <label for="name">Nazwa playlisty:</label>
@@ -32,6 +36,7 @@
 
     <button>Dodaj playlistę</button>
   </form>
+  <% } %>
 
 
   <% if (playlists.length > 0) { %>
@@ -39,7 +44,7 @@
     <ul>
       <% playlists.forEach((pl, idx) => { %>
         <li>
-          <strong><%= pl.name %></strong>
+          <strong><%= pl.name %></strong><% if (locals.currentUser && locals.currentUser.isAdmin && pl.ownerName) { %> <span style="font-weight:normal;color:#666;">(użytkownik: <%= pl.ownerName %>)</span><% } %>
 
  
           <a href="/playlista/edit/<%= idx %>">

@@ -10,7 +10,7 @@
     <header>
       <nav>
         <% if (currentUser) { %>
-          <span>Zalogowany jako <strong><%= currentUser.username %></strong></span>
+          <span>Zalogowany jako <strong><%= currentUser.username %></strong><% if (currentUser.isAdmin) { %> <em>(Admin)</em><% } %></span>
           <form action="/logout" method="POST" style="display: inline;">
             <button type="submit">Wyloguj</button>
           </form>

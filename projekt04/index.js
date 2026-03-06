@@ -90,12 +90,20 @@ function createUser(username, password) {
   return { id: info.lastInsertRowid, username };
 }
 
+function getUserWithAdmin(sessionUser) {
+  if (!sessionUser) return null;
+  const row = db.prepare("SELECT id, username, is_admin FROM users WHERE id = ?").get(sessionUser.id);
+  if (!row) return null;
+  return { id: row.id, username: row.username, isAdmin: !!row.is_admin };
+}
+
 app.use((req, res, next) => {
   const cookies = parseCookies(req.headers.cookie || "");
   const sessionId = cookies.sessionId;
 
   if (sessionId && sessions.has(sessionId)) {
-    req.user = sessions.get(sessionId);
+    const sessionUser = sessions.get(sessionId);
+    req.user = getUserWithAdmin(sessionUser);
   } else {
     req.user = null;
   }
@@ -104,13 +112,24 @@ app.use((req, res, next) => {
   next();
 });
 
+function requireLogin(req, res, next) {
+  if (!req.user) {
+    return res.redirect("/logowanie");
+  }
+  next();
+}
+
+const userId = (req) => req.user ? req.user.id : null;
+const isAdmin = (req) => req.user && req.user.isAdmin;
 
 app.get("/", (req, res) => {
+  const uid = userId(req);
+  const admin = isAdmin(req);
   const categoriesSummaries = fav.getCategorySummaries();
   const categories = [];
 
   categoriesSummaries.forEach(summary => {
-    const originalCategory = fav.getCategory(summary.id);
+    const originalCategory = fav.getCategory(summary.id, uid, admin);
     const fullCategory = { ...originalCategory, cards: [...originalCategory.cards] };
 
     if (req.query.category === fullCategory.id) {
@@ -127,7 +146,7 @@ app.get("/", (req, res) => {
   res.render("index", {
     title: "Moja ulubiona muzyka",
     categories,
-    playlists: fav.getPlaylists()
+    playlists: fav.getPlaylists(uid, admin)
   });
 });
 
@@ -243,7 +262,7 @@ app.get("/moje_polubione/:category_id", (req, res) => {
   const category_id = req.params.category_id;
   if (!fav.hasCategory(category_id)) return res.sendStatus(404);
 
-  const category = fav.getCategory(category_id);
+  const category = fav.getCategory(category_id, userId(req), isAdmin(req));
   let cards = [...category.cards];
 
   if (req.query.sort === "lowest") {
@@ -258,12 +277,12 @@ app.get("/moje_polubione/:category_id", (req, res) => {
   });
 });
 
-
-app.post("/moje_polubione/:category_id/new", (req, res) => {
+app.post("/moje_polubione/:category_id/new", requireLogin, (req, res) => {
   const category_id = req.params.category_id;
   if (!fav.hasCategory(category_id)) return res.sendStatus(404);
 
-  const category = fav.getCategory(category_id);
+  const uid = req.user.id;
+  const category = fav.getCategory(category_id, uid);
   const card_data = {};
 
   category.requiredFields.forEach(field => {
@@ -271,12 +290,12 @@ app.post("/moje_polubione/:category_id/new", (req, res) => {
   });
 
   const errors = fav.validateCardData(category_id, card_data);
-  if (errors.length === 0 && fav.isDuplicateCard(category_id, card_data)) {
+  if (errors.length === 0 && fav.isDuplicateCard(category_id, card_data, uid)) {
     errors.push("Taki wpis już istnieje w tej kategorii");
   }
 
   if (errors.length === 0) {
-    fav.addCard(category_id, card_data);
+    fav.addCard(category_id, card_data, uid);
     res.redirect(`/moje_polubione/${category_id}`);
   } else {
     res.status(400).render("nowe_polubienie", {
@@ -290,21 +309,23 @@ app.post("/moje_polubione/:category_id/new", (req, res) => {
 
 
 app.get("/playlista", (req, res) => {
-  const utworyCategory = fav.getCategory("ulubione-utwory");
-  let utwory = utworyCategory ? utworyCategory.cards : [];
+  const uid = userId(req);
+  const admin = isAdmin(req);
+  const utworyCategory = fav.getCategory("ulubione-utwory", uid, false);
+  const utwory = utworyCategory ? utworyCategory.cards : [];
 
   res.render("playlista", {
     title: "Tworzenie nowej playlisty",
     utwory,
-    playlists: fav.getPlaylists(),
+    playlists: fav.getPlaylists(uid, admin),
     errors: [],
     name: "",
     selected: []
   });
 });
 
-
-app.post("/playlista", (req, res) => {
+app.post("/playlista", requireLogin, (req, res) => {
+  const uid = req.user.id;
   const name = req.body.name;
   const utwory = req.body.utwory;
   const errors = [];
@@ -312,8 +333,8 @@ app.post("/playlista", (req, res) => {
   if (!name || name.trim() === "") errors.push("Podaj nazwę playlisty");
   if (!utwory) errors.push("Wybierz przynajmniej jeden utwór");
 
-  const utworyCategory = fav.getCategory("ulubione-utwory");
-  let allSongs = utworyCategory ? utworyCategory.cards : [];
+  const utworyCategory = fav.getCategory("ulubione-utwory", uid);
+  const allSongs = utworyCategory ? utworyCategory.cards : [];
 
   let selectedSongs = [];
   if (utwory) selectedSongs = Array.isArray(utwory) ? utwory : [utwory];
@@ -321,13 +342,13 @@ app.post("/playlista", (req, res) => {
   const songs = allSongs.filter(song => selectedSongs.includes(song.tytuł));
 
   if (errors.length === 0) {
-    fav.addPlaylist(name, songs);
+    fav.addPlaylist(name, songs, uid);
     res.redirect("/playlista");
   } else {
     res.status(400).render("playlista", {
       title: "Tworzenie nowej playlisty",
       utwory: allSongs,
-      playlists: fav.getPlaylists(),
+      playlists: fav.getPlaylists(uid),
       errors,
       name,
       selected: selectedSongs
@@ -335,29 +356,33 @@ app.post("/playlista", (req, res) => {
   }
 });
 
-app.post("/playlista/delete/:idx", (req, res) => {
+app.post("/playlista/delete/:idx", requireLogin, (req, res) => {
   const index = parseInt(req.params.idx);
-  const playlists = fav.getPlaylists();
+  const uid = req.user.id;
+  const admin = isAdmin(req);
+  const playlists = fav.getPlaylists(uid, admin);
 
   if (isNaN(index) || index < 0 || index >= playlists.length) {
     return res.sendStatus(400);
   }
 
-  fav.deletePlaylist(index);
+  fav.deletePlaylist(index, uid, admin);
   res.redirect("/playlista");
 });
 
-
-app.get("/playlista/edit/:idx", (req, res) => {
+app.get("/playlista/edit/:idx", requireLogin, (req, res) => {
   const index = parseInt(req.params.idx);
-  const playlists = fav.getPlaylists();
+  const uid = req.user.id;
+  const admin = isAdmin(req);
+  const playlists = fav.getPlaylists(uid, admin);
 
   if (isNaN(index) || index < 0 || index >= playlists.length) {
     return res.sendStatus(404);
   }
 
   const playlist = playlists[index];
-  const utworyCategory = fav.getCategory("ulubione-utwory");
+  const ownerId = playlist.ownerId != null ? playlist.ownerId : uid;
+  const utworyCategory = fav.getCategory("ulubione-utwory", ownerId, false);
   const allSongs = utworyCategory ? utworyCategory.cards : [];
 
   res.render("edit_playlist", {
@@ -370,10 +395,11 @@ app.get("/playlista/edit/:idx", (req, res) => {
   });
 });
 
-
-app.post("/playlista/edit/:idx", (req, res) => {
+app.post("/playlista/edit/:idx", requireLogin, (req, res) => {
   const index = parseInt(req.params.idx);
-  const playlists = fav.getPlaylists();
+  const uid = req.user.id;
+  const admin = isAdmin(req);
+  const playlists = fav.getPlaylists(uid, admin);
 
   if (isNaN(index) || index < 0 || index >= playlists.length) {
     return res.sendStatus(404);
@@ -386,7 +412,9 @@ app.post("/playlista/edit/:idx", (req, res) => {
   if (!name || name.trim() === "") errors.push("Podaj nazwę playlisty");
   if (!utwory) errors.push("Wybierz przynajmniej jeden utwór");
 
-  const utworyCategory = fav.getCategory("ulubione-utwory");
+  const playlist = playlists[index];
+  const ownerId = playlist.ownerId != null ? playlist.ownerId : uid;
+  const utworyCategory = fav.getCategory("ulubione-utwory", ownerId, false);
   const allSongs = utworyCategory ? utworyCategory.cards : [];
 
   let selectedSongs = [];
@@ -405,22 +433,33 @@ app.post("/playlista/edit/:idx", (req, res) => {
     });
   }
 
-  fav.updatePlaylist(index, name, songs);
+  fav.updatePlaylist(index, name, songs, uid, admin);
   res.redirect("/playlista");
 });
 
-
-app.post("/moje_polubione/:category_id/delete/:idx", (req, res) => {
+app.post("/moje_polubione/:category_id/delete/:idx", requireLogin, (req, res) => {
   const category_id = req.params.category_id;
   const index = parseInt(req.params.idx);
+  const uid = req.user.id;
+  const admin = isAdmin(req);
 
   if (!fav.hasCategory(category_id)) return res.sendStatus(404);
 
-  const category = fav.getCategory(category_id);
+  const category = fav.getCategory(category_id, uid, admin);
   if (isNaN(index) || index < 0 || index >= category.cards.length) return res.sendStatus(400);
 
-  fav.deleteCard(category_id, index);
-  res.redirect(`/moje_polubione/${category_id}`);
+  if (admin) {
+    const cardId = fav.getCardIdAtCategoryIndex(category_id, index, true);
+    if (cardId != null) fav.deleteCardById(cardId);
+  } else {
+    fav.deleteCard(category_id, index, uid);
+  }
+  const referer = req.get("Referer") || "";
+  if (referer.includes("/moje_polubione/")) {
+    res.redirect(`/moje_polubione/${category_id}`);
+  } else {
+    res.redirect("/");
+  }
 });
 
 app.listen(port, () => {
