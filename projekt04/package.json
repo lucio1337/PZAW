@@ -1,5 +1,5 @@
 {
-  "name": "projekt03",
+  "name": "projekt04",
   "version": "1.0.0",
   "description": "Moje ulubione utwory – użytkownik dodaje ulubione utwory (tytuł, wykonawcę, gatunek, ocenę)",
   "main": "index.js",
@@ -16,5 +16,6 @@
     "better-sqlite3": "^12.6.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0"
-  }
+  },
+  "devDependencies": {}
 }
