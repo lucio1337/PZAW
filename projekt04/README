@@ -28,3 +28,4 @@ Admin może:
  - !UWAGA! Jeżeli zamierzasz tworzyć inne konta oraz również chcesz używać konta admina ważne jest stworzenie admina przed jakim kolwiek innym użytkownikiem
  - Użyć komendy: node index.js
  - Aplikacja powinna być pod adresem http://localhost:8000
+ - na konto admina można wejść z danymi login:admin, hasło:admin123
