@@ -1,4 +1,7 @@
 import Database from 'better-sqlite3';
+import crypto from "crypto";
+import fs from "fs";
+import { hash as argon2hash } from "@node-rs/argon2";
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { initializeDatabase } from "./database.js";
@@ -10,6 +13,24 @@ const __dirname = dirname(__filename);
 
 const dbPath = join(__dirname, 'database.sqlite');
 const db = new Database(dbPath);
+
+// Ensure a demo user exists so FK constraints on user_id are satisfied.
+const pepperPath = join(__dirname, "auth_pepper.txt");
+let PEPPER = "";
+if (fs.existsSync(pepperPath)) {
+  PEPPER = fs.readFileSync(pepperPath, "utf-8").trim();
+} else {
+  PEPPER = crypto.randomBytes(32).toString("base64");
+  fs.writeFileSync(pepperPath, PEPPER);
+}
+
+const demoId = 1;
+const existingDemo = db.prepare("SELECT id FROM users WHERE id = ?").get(demoId);
+if (!existingDemo) {
+  const demoHash = await argon2hash("demo" + PEPPER);
+  db.prepare("INSERT INTO users (id, username, password, is_admin) VALUES (?, ?, ?, 0)")
+    .run(demoId, "demo", demoHash);
+}
 
 db.exec('DELETE FROM playlist_songs');
 db.exec('DELETE FROM playlists');

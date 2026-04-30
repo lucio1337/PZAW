@@ -55,7 +55,23 @@ ul li{
     margin-bottom: 10%;
 }
 
+/* Add this after your existing ul li rule */
+.playlists-list > li {
+    margin-bottom: 1.5%;
+}
 
+.playlists-list > li ul li {
+    margin-bottom: 1.0%;
+}
+
+.playlists-list > li > strong {
+    display: inline;
+}
+
+.playlist-header {
+    display: block;
+    margin-bottom: 0.8%;
+}
 
 
 a {
@@ -71,7 +87,7 @@ a:hover {
 
 
 form {
-    padding: 1%;
+    padding: 0.5%;
     
 }
 

@@ -1,6 +1,7 @@
 import express from "express";
 import crypto from "crypto";
 import fs from "fs";
+import { hash as argon2hash, verify as argon2verify } from "@node-rs/argon2";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fav from "./models/favourite.js";
@@ -51,28 +52,31 @@ function setSessionCookie(res, sessionId) {
   res.setHeader("Set-Cookie", `sessionId=${sessionId}; HttpOnly; Path=/`);
 }
 
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString("hex");
-  const hash = crypto
-    .createHash("sha256")
-    .update(salt + password + PEPPER)
-    .digest("hex");
-
-  return `${salt}$${hash}`;
+function isArgon2Hash(stored) {
+  return typeof stored === "string" && stored.startsWith("$argon2");
 }
 
-function verifyPassword(password, stored) {
-  const parts = stored.split("$");
-  if (parts.length !== 2) return false;
+async function hashPassword(password) {
+  // Keep PEPPER as app-level secret; Argon2 handles per-hash salt internally.
+  return await argon2hash(password + PEPPER);
+}
 
+function verifyLegacySha256(password, stored) {
+  const parts = String(stored || "").split("$");
+  if (parts.length !== 2) return false;
   const [salt, hash] = parts;
   const checkHash = crypto
     .createHash("sha256")
     .update(salt + password + PEPPER)
     .digest("hex");
-    
-
   return checkHash === hash;
+}
+
+async function verifyPassword(password, stored) {
+  if (isArgon2Hash(stored)) {
+    return await argon2verify(stored, password + PEPPER);
+  }
+  return verifyLegacySha256(password, stored);
 }
 
 function findUserByUsername(username) {
@@ -81,8 +85,8 @@ function findUserByUsername(username) {
     .get(username);
 }
 
-function createUser(username, password) {
-  const hashedPassword = hashPassword(password);
+async function createUser(username, password) {
+  const hashedPassword = await hashPassword(password);
   const info = db
     .prepare("INSERT INTO users (username, password) VALUES (?, ?)")
     .run(username, hashedPassword);
@@ -187,11 +191,15 @@ app.post("/rejestracja", (req, res) => {
     });
   }
 
-  const user = createUser(username, password);
-  const sessionId = createSession(user);
-  setSessionCookie(res, sessionId);
-
-  res.redirect("/");
+  (async () => {
+    const user = await createUser(username, password);
+    const sessionId = createSession(user);
+    setSessionCookie(res, sessionId);
+    res.redirect("/");
+  })().catch(err => {
+    console.error(err);
+    res.sendStatus(500);
+  });
 });
 
 app.get("/logowanie", (req, res) => {
@@ -218,27 +226,37 @@ app.post("/logowanie", (req, res) => {
 
   let user = null;
 
-  if (errors.length === 0) {
-    const row = findUserByUsername(username);
-    if (!row || !verifyPassword(password, row.password)) {
-      errors.push("Nieprawidłowa nazwa użytkownika lub hasło");
-    } else {
-      user = row;
+  (async () => {
+    if (errors.length === 0) {
+      const row = findUserByUsername(username);
+      if (!row || !(await verifyPassword(password, row.password))) {
+        errors.push("Nieprawidłowa nazwa użytkownika lub hasło");
+      } else {
+        user = row;
+      }
     }
-  }
 
-  if (errors.length > 0) {
-    return res.status(400).render("login", {
-      title: "Logowanie",
-      errors,
-      username: username || ""
-    });
-  }
+    if (errors.length > 0) {
+      return res.status(400).render("login", {
+        title: "Logowanie",
+        errors,
+        username: username || ""
+      });
+    }
 
-  const sessionId = createSession(user);
-  setSessionCookie(res, sessionId);
+    // Automatic upgrade: if a user logs in with legacy SHA-256 hash, re-hash with Argon2.
+    if (user && !isArgon2Hash(user.password) && verifyLegacySha256(password, user.password)) {
+      const newHash = await hashPassword(password);
+      db.prepare("UPDATE users SET password = ? WHERE id = ?").run(newHash, user.id);
+    }
 
-  res.redirect("/");
+    const sessionId = createSession(user);
+    setSessionCookie(res, sessionId);
+    res.redirect("/");
+  })().catch(err => {
+    console.error(err);
+    res.sendStatus(500);
+  });
 });
 
 app.post("/logout", (req, res) => {

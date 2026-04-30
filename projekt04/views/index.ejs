@@ -115,11 +115,14 @@
       <% } else { %>
         <p>Brak utworów w tej playliście.</p>
       <% } %>
-      <% if (locals.currentUser) { %>
-        <form action="/playlista/delete/<%= plIdx %>" method="POST" style="margin-top:0.5em;">
-          <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
-        </form>
-      <% } %>
+      <% if (locals.currentUser || locals.currentUser.isAdmin) { %>
+  <a href="/playlista/edit/<%= plIdx %>">
+    <button type="button">Edytuj playlistę</button>
+  </a>
+  <form action="/playlista/delete/<%= plIdx %>" method="POST" style="margin-top:0.5em;">
+    <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
+  </form>
+<% } %>
       <br>
     <% }) %>
   <% } %>
