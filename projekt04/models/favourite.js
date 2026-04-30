@@ -52,13 +52,21 @@ function toCard(row) {
 export function isDuplicateCard(categoryId, newCard, userId) {
   if (!hasCategory(categoryId) || !userId) return false;
   const cards = getCardsForCategoryAndUser(categoryId, userId);
-  const requiredFields = favourite_album_or_song[categoryId].requiredFields;
+
+  const uniqueFieldsByCategory = {
+    'ulubione-utwory': ['tytuł', 'wykonawca'],
+    'ulubione-albumy': ['tytuł', 'wykonawca'],
+    'ulubieni-artysci': ['wykonawca'],
+  };
+
+  const requiredFields = favourite_album_or_song[categoryId].requiredFields || [];
+  const uniqueFields = uniqueFieldsByCategory[categoryId] || requiredFields;
+
+  const norm = (v) => String(v ?? '').trim().toLowerCase();
+
   return cards.some((card) => {
-    return requiredFields.every((field) => {
-      if (field === 'ocena') {
-        return parseFloat(card[field]) === parseFloat(newCard[field]);
-      }
-      return card[field] === newCard[field];
+    return uniqueFields.every((field) => {
+      return norm(card[field]) === norm(newCard[field]);
     });
   });
 }
@@ -243,6 +251,87 @@ export function deleteCard(categoryId, idx, userId) {
   return removeCard(categoryId, idx, userId);
 }
 
+function assertAllowedField(fieldName) {
+  if (fieldName !== 'tytuł' && fieldName !== 'wykonawca') {
+    throw new Error(`Unsupported field for top stats: ${fieldName}`);
+  }
+}
+
+function topByCaseInsensitiveFields(categoryId, fieldNames, limit = 5) {
+  const fields = Array.isArray(fieldNames) ? fieldNames : [fieldNames];
+  if (fields.length < 1 || fields.length > 2) {
+    throw new Error('topByCaseInsensitiveFields supports 1 or 2 fields only');
+  }
+  fields.forEach(assertAllowedField);
+
+  const whereNotEmpty = fields
+    .map(f => `c.${f} IS NOT NULL AND trim(c.${f}) <> ''`)
+    .join(' AND ');
+
+  if (fields.length === 1) {
+    const f = fields[0];
+    const sql = `
+      SELECT
+        (SELECT ${f} FROM cards WHERE id = g.minId) AS ${f},
+        g.count AS count
+      FROM (
+        SELECT lower(c.${f}) AS k, COUNT(*) AS count, MIN(c.id) AS minId
+        FROM cards c
+        WHERE c.category_id = ?
+          AND ${whereNotEmpty}
+        GROUP BY k
+        ORDER BY count DESC
+        LIMIT ?
+      ) g
+      ORDER BY g.count DESC, ${f} COLLATE NOCASE ASC
+    `;
+
+    return db.prepare(sql).all(categoryId, limit).map(r => ({
+      ...r,
+      name: r[f],
+      count: r.count,
+    }));
+  }
+
+  const [f1, f2] = fields;
+  const sql = `
+    SELECT
+      (SELECT ${f1} FROM cards WHERE id = g.minId) AS ${f1},
+      (SELECT ${f2} FROM cards WHERE id = g.minId) AS ${f2},
+      g.count AS count
+    FROM (
+      SELECT lower(c.${f1}) AS k1, lower(c.${f2}) AS k2, COUNT(*) AS count, MIN(c.id) AS minId
+      FROM cards c
+      WHERE c.category_id = ?
+        AND ${whereNotEmpty}
+      GROUP BY k1, k2
+      ORDER BY count DESC
+      LIMIT ?
+    ) g
+    ORDER BY g.count DESC, ${f1} COLLATE NOCASE ASC, ${f2} COLLATE NOCASE ASC
+  `;
+
+  return db.prepare(sql).all(categoryId, limit).map(r => ({
+    ...r,
+    name: `${r[f1]} - ${r[f2]}`,
+    count: r.count,
+  }));
+}
+
+export function getTopAlbums(limit = 5) {
+  // Album is uniquely identified by (title + artist), case-insensitive.
+  return topByCaseInsensitiveFields('ulubione-albumy', ['tytuł', 'wykonawca'], limit);
+}
+
+export function getTopArtists(limit = 5) {
+  return topByCaseInsensitiveFields('ulubieni-artysci', 'wykonawca', limit);
+}
+
+export function getTopSongs(limit = 5) {
+  // Song is uniquely identified by (title + artist), case-insensitive.
+  return topByCaseInsensitiveFields('ulubione-utwory', ['tytuł', 'wykonawca'], limit);
+}
+
 export default {
   getCategorySummaries,
   hasCategory,
@@ -259,4 +348,7 @@ export default {
   deletePlaylistById,
   updatePlaylist,
   deleteCard,
+  getTopAlbums,
+  getTopArtists,
+  getTopSongs,
 };

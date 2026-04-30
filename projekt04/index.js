@@ -150,7 +150,12 @@ app.get("/", (req, res) => {
   res.render("index", {
     title: "Moja ulubiona muzyka",
     categories,
-    playlists: fav.getPlaylists(uid, admin)
+    playlists: fav.getPlaylists(uid, admin),
+    top: {
+      albums: fav.getTopAlbums(5),
+      artists: fav.getTopArtists(5),
+      songs: fav.getTopSongs(5),
+    },
   });
 });
 

@@ -7,27 +7,110 @@
     <p><a href="/logowanie">Zaloguj się</a>, aby dodawać i przeglądać swoje ulubione albumy, utwory, artystów i playlisty.</p>
   <% } %>
 
+  <% if (top && ((top.albums && top.albums.length) || (top.artists && top.artists.length) || (top.songs && top.songs.length))) { %>
+    <section class="card top-stats">
+      <div class="card__header">
+        <h2>Najczęściej dodawane do ulubionych</h2>
+        <h3>TOP 5</h3>
+      </div>
+
+      <div class="top-stats__grid">
+        <% if (top.albums && top.albums.length) { %>
+          <div class="top-stats__panel">
+            <h3>Albumy</h3>
+            <ol class="top-stats__list">
+              <% top.albums.forEach(item => { %>
+                <li class="top-stats__item">
+                  <span class="top-stats__name" title="<%= item.name %>"><%= item.name %></span>
+                  <span class="top-stats__count"><%= item.count %></span>
+                </li>
+              <% }) %>
+            </ol>
+          </div>
+        <% } %>
+
+        <% if (top.artists && top.artists.length) { %>
+          <div class="top-stats__panel">
+            <h3>Artyści</h3>
+            <ol class="top-stats__list">
+              <% top.artists.forEach(item => { %>
+                <li class="top-stats__item">
+                  <span class="top-stats__name" title="<%= item.name %>"><%= item.name %></span>
+                  <span class="top-stats__count"><%= item.count %></span>
+                </li>
+              <% }) %>
+            </ol>
+          </div>
+        <% } %>
+
+        <% if (top.songs && top.songs.length) { %>
+          <div class="top-stats__panel">
+            <h3>Utwory</h3>
+            <ol class="top-stats__list">
+              <% top.songs.forEach(item => { %>
+                <li class="top-stats__item">
+                  <span class="top-stats__name" title="<%= item.name %>"><%= item.name %></span>
+                  <span class="top-stats__count"><%= item.count %></span>
+                </li>
+              <% }) %>
+            </ol>
+          </div>
+        <% } %>
+      </div>
+    </section>
+  <% } %>
+
   <% if (categories.length === 0) { %>
     <p>Nie masz jeszcze żadnych kategorii.</p>
   <% } else { %>
-    <ul>
-      <% categories.forEach(cat => { %>
-        <li><a href="/moje_polubione/<%= cat.id %>"><%= cat.title %></a></li>
-      <% }) %>
-      <li><a href="/playlista">tworzenie nowej playlisty</a></li>
-    </ul>
+    <% if (locals.currentUser) { %>
+    <details class="rolled-menu">
+      <summary class="rolled-menu__summary">Menu zarządzania</summary>
+      <div class="rolled-menu__content">
+        <div class="rolled-menu__section">
+          <div class="rolled-menu__title">Kategorie</div>
+          <ul class="rolled-menu__list">
+            <% categories.forEach(cat => { %>
+              <li><a href="/moje_polubione/<%= cat.id %>"><%= cat.title %></a></li>
+            <% }) %>
+          </ul>
+        </div>
+
+        <div class="rolled-menu__section">
+          <div class="rolled-menu__title">Playlisty</div>
+          <ul class="rolled-menu__list">
+            <li><a href="/playlista">Tworzenie nowej playlisty</a></li>
+          </ul>
+        </div>
+      </div>
+    </details>
+    <% } %>
   <% } %>
 
   
   <% categories.forEach(category => { %>
     <% if (category.cards && category.cards.length > 0) { %>
-      <h2><%= category.title %></h2>
+      <% if (category.title=="ulubieni artyści") { %>
+      <h2>Twoi <%= category.title %></h2>
+      <% } else { %>
+      <h2>Twoje <%= category.title %></h2>
+      <% } %>
 
-      <div>
+      <div class="sort-controls">
         <strong>Sortuj według oceny:</strong>
-        <a href="/?sort=lowest&category=<%= category.id %>">Od najgorszej |</a>
-        <a href="/?sort=highest&category=<%= category.id %>">Od najlepszej |</a>
-        <a href="/">Resetuj</a>
+        <form action="/" method="GET" class="sort-controls__form">
+          <input type="hidden" name="sort" value="lowest" />
+          <input type="hidden" name="category" value="<%= category.id %>" />
+          <button type="submit" class="btn btn--ghost">Od najgorszej</button>
+        </form>
+        <form action="/" method="GET" class="sort-controls__form">
+          <input type="hidden" name="sort" value="highest" />
+          <input type="hidden" name="category" value="<%= category.id %>" />
+          <button type="submit" class="btn btn--ghost">Od najlepszej</button>
+        </form>
+        <form action="/" method="GET" class="sort-controls__form">
+          <button type="submit" class="btn btn--ghost">Resetuj</button>
+        </form>
       </div>
 
       <table>
@@ -49,7 +132,7 @@
               <th>Właściciel</th>
             <% } %>
 
-              <th>Akcja</th>
+              <th>Szybka akcja</th>
           </tr>
         </thead>
 
@@ -69,7 +152,7 @@
                 <td><%= card.ocena %></td>
               <% } %>
               <% if (locals.currentUser && locals.currentUser.isAdmin) { %>
-                <td><%= card.ownerName || '—' %></td>
+                <td><%= card.ownerName || '-' %></td>
               <% } %>
 
               <td>
@@ -116,9 +199,9 @@
         <p>Brak utworów w tej playliście.</p>
       <% } %>
       <% if (locals.currentUser || locals.currentUser.isAdmin) { %>
-  <a href="/playlista/edit/<%= plIdx %>">
-    <button type="button">Edytuj playlistę</button>
-  </a>
+  <form action="/playlista/edit/<%= plIdx %>" method="GET" style="margin-top:0.5em;">
+    <button type="submit">Edytuj playlistę</button>
+  </form>
   <form action="/playlista/delete/<%= plIdx %>" method="POST" style="margin-top:0.5em;">
     <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
   </form>

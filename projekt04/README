@@ -1,22 +1,29 @@
 # Moja ulubiona muzyka
 
-Aplikacja webowa pozwalająca na zarządzanie ulubionymi utworami muzycznymi oraz playlistami.  
+Aplikacja webowa pozwalająca na zarządzanie ulubionymi utworami muzycznymi, artystami, albumami oraz playlistami.  
 
 Zalogowany użytkownik może:  
 - Przeglądać kategorie ulubionych utworów (artyści, albumy, utwory itp.)  
 - Przeglądać karty w każdej kategorii (tytuł, wykonawca, gatunek, ocena)  
 - Usuwać istniejące wpisy  
-- Tworzyć playlisty z wybranych utworów  
+- Tworzyć playlisty z wybranych ulubionych utworów  
 - Usuwać i edytować playlisty 
 - Oglądać i edytować tylko swoje wpisy
+- Może zobaczyć czego ludzie dodają do ulubionych najczęściej
 
-Niezalogowany użytkownik ma tylko opcje stworzenia konta lub zalogowania.
+Niezalogowany użytkownik ma tylko opcje stworzenia konta lub zalogowania oraz obejrzenia jakie rzeczy są najczęściej dodawane do ulubionych.
 
 Admin może:
 - Przeglądać wpisy wszystkich użytkowników
 - Zarządzać wpisami wszystkich użytkowników
 - Zobaczyć jaki użytkownik stworzył wpis
-- Również może tworzyć wpisy jak zwykły zaalogowany użytkownik
+- Również może tworzyć wpisy jak zwykły zalogowany użytkownik
+
+#Jak poruszać się po aplikacji
+- Na stronie głównej przy pierwszym uruchomieniu aplikacji można zobaczyć jakie rzeczy są najczęściej dodawane do ulubionych oraz można się zalogować lub zarejestrować.
+- Po zalogowaniu można zobaczyć swoje ulubione utwory, artystów, albumy i playlisty.
+- W rozwiajnym menu zarządzania można przejść konrketnie do ulubionych utworów, artystów, albumów lub playlist.
+- W każdej z tych kategorii można zobaczyć oraz dodawać nowe wpisy lub usuwać te, które już się nie podobają.
 
 
 # Odpalanie
@@ -25,7 +32,6 @@ Admin może:
  - Użyj komendy: npm install better-sqlite3
  - Jeżeli chce się użyć seedera to użyj komendy: npm run seed
  - Jeżeli chce się używać konta admina użyj komendy: npm run create-admin
- - !UWAGA! Jeżeli zamierzasz tworzyć inne konta oraz również chcesz używać konta admina ważne jest stworzenie admina przed jakim kolwiek innym użytkownikiem
- - Użyć komendy: node index.js
+ - Aby włączyć aplikację użyj komeny: node index.js
  - Aplikacja powinna być pod adresem http://localhost:8000
  - na konto admina można wejść z danymi login:admin, hasło:admin123
