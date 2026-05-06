@@ -156,7 +156,10 @@
               <% } %>
 
               <td>
-                <% if (locals.currentUser || locals.currentUser.isAdmin) { %>
+                <% if (locals.currentUser) { %>
+                  <form action="/moje_polubione/<%= category.id %>/edit/<%= card.id %>" method="GET" style="display:inline;">
+                    <button type="submit">Edytuj</button>
+                  </form>
                   <form action="/moje_polubione/<%= category.id %>/delete/<%= index %>" method="POST">
                     <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
                       Usuń

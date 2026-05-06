@@ -5,7 +5,7 @@ Aplikacja webowa pozwalająca na zarządzanie ulubionymi utworami muzycznymi, ar
 Zalogowany użytkownik może:  
 - Przeglądać kategorie ulubionych utworów (artyści, albumy, utwory itp.)  
 - Przeglądać karty w każdej kategorii (tytuł, wykonawca, gatunek, ocena)  
-- Usuwać istniejące wpisy  
+- Usuwać i edytować istniejące wpisy  
 - Tworzyć playlisty z wybranych ulubionych utworów  
 - Usuwać i edytować playlisty 
 - Oglądać i edytować tylko swoje wpisy

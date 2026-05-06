@@ -49,6 +49,33 @@ function toCard(row) {
   return card;
 }
 
+export function getCardById(categoryId, cardId, userId, isAdmin) {
+  if (!hasCategory(categoryId)) return null;
+  if (cardId == null) return null;
+
+  if (isAdmin) {
+    const row = db.prepare(`
+      SELECT c.id, c.tytuł, c.wykonawca, c.gatunek, c.ocena, u.username AS ownerName
+      FROM cards c
+      LEFT JOIN users u ON c.user_id = u.id
+      WHERE c.category_id = ? AND c.id = ?
+    `).get(categoryId, cardId);
+    if (!row) return null;
+    const card = toCard(row);
+    if (row.ownerName) card.ownerName = row.ownerName;
+    return card;
+  }
+
+  if (!userId) return null;
+  const row = db.prepare(`
+    SELECT id, tytuł, wykonawca, gatunek, ocena
+    FROM cards
+    WHERE category_id = ? AND id = ? AND user_id = ?
+  `).get(categoryId, cardId, userId);
+  if (!row) return null;
+  return toCard(row);
+}
+
 export function isDuplicateCard(categoryId, newCard, userId) {
   if (!hasCategory(categoryId) || !userId) return false;
   const cards = getCardsForCategoryAndUser(categoryId, userId);
@@ -65,6 +92,29 @@ export function isDuplicateCard(categoryId, newCard, userId) {
   const norm = (v) => String(v ?? '').trim().toLowerCase();
 
   return cards.some((card) => {
+    return uniqueFields.every((field) => {
+      return norm(card[field]) === norm(newCard[field]);
+    });
+  });
+}
+
+export function isDuplicateCardExcludingId(categoryId, newCard, userId, excludeCardId) {
+  if (!hasCategory(categoryId) || !userId) return false;
+  const cards = getCardsForCategoryAndUser(categoryId, userId);
+
+  const uniqueFieldsByCategory = {
+    'ulubione-utwory': ['tytuł', 'wykonawca'],
+    'ulubione-albumy': ['tytuł', 'wykonawca'],
+    'ulubieni-artysci': ['wykonawca'],
+  };
+
+  const requiredFields = favourite_album_or_song[categoryId].requiredFields || [];
+  const uniqueFields = uniqueFieldsByCategory[categoryId] || requiredFields;
+
+  const norm = (v) => String(v ?? '').trim().toLowerCase();
+
+  return cards.some((card) => {
+    if (excludeCardId != null && card.id === excludeCardId) return false;
     return uniqueFields.every((field) => {
       return norm(card[field]) === norm(newCard[field]);
     });
@@ -166,6 +216,54 @@ export function getCardIdAtCategoryIndex(categoryId, index, isAdmin) {
 
 export function deleteCardById(cardId) {
   db.prepare('DELETE FROM cards WHERE id = ?').run(cardId);
+}
+
+export function getCardAtCategoryIndex(categoryId, index, userId, isAdmin) {
+  if (!hasCategory(categoryId)) return null;
+  const category = getCategory(categoryId, userId, isAdmin);
+  if (!category || !Array.isArray(category.cards)) return null;
+  if (index < 0 || index >= category.cards.length) return null;
+  return category.cards[index];
+}
+
+export function getCardIdAtCategoryIndexForUser(categoryId, index, userId) {
+  if (!hasCategory(categoryId) || !userId) return null;
+  const rows = getCardIdsForCategoryAndUser(categoryId, userId);
+  if (index >= 0 && index < rows.length) return rows[index].id;
+  return null;
+}
+
+export function updateCardById(cardId, card, userId, isAdmin) {
+  const stmt = isAdmin
+    ? db.prepare(`
+        UPDATE cards
+        SET tytuł = ?, wykonawca = ?, gatunek = ?, ocena = ?
+        WHERE id = ?
+      `)
+    : db.prepare(`
+        UPDATE cards
+        SET tytuł = ?, wykonawca = ?, gatunek = ?, ocena = ?
+        WHERE id = ? AND user_id = ?
+      `);
+
+  const info = isAdmin
+    ? stmt.run(
+        card.tytuł || null,
+        card.wykonawca || null,
+        card.gatunek || null,
+        card.ocena,
+        cardId
+      )
+    : stmt.run(
+        card.tytuł || null,
+        card.wykonawca || null,
+        card.gatunek || null,
+        card.ocena,
+        cardId,
+        userId
+      );
+
+  return info.changes > 0;
 }
 
 export function getPlaylists(userId, isAdmin) {
@@ -339,9 +437,14 @@ export default {
   addCard,
   validateCardData,
   isDuplicateCard,
+  isDuplicateCardExcludingId,
   removeCard,
   getCardIdAtCategoryIndex,
+  getCardAtCategoryIndex,
+  getCardById,
+  getCardIdAtCategoryIndexForUser,
   deleteCardById,
+  updateCardById,
   getPlaylists,
   addPlaylist,
   deletePlaylist,

@@ -330,6 +330,68 @@ app.post("/moje_polubione/:category_id/new", requireLogin, (req, res) => {
   }
 });
 
+app.get("/moje_polubione/:category_id/edit/:cardId", requireLogin, (req, res) => {
+  const category_id = req.params.category_id;
+  const cardId = parseInt(req.params.cardId);
+  const uid = req.user.id;
+  const admin = isAdmin(req);
+
+  if (!fav.hasCategory(category_id)) return res.sendStatus(404);
+  if (isNaN(cardId) || cardId < 0) return res.sendStatus(400);
+
+  const category = fav.getCategory(category_id, uid, admin);
+  const card = fav.getCardById(category_id, cardId, uid, admin);
+  if (!category || !card) return res.sendStatus(404);
+
+  res.render("edit_polubienie", {
+    title: "Edytuj wpis",
+    category,
+    card,
+    cardId,
+    errors: []
+  });
+});
+
+app.post("/moje_polubione/:category_id/edit/:cardId", requireLogin, (req, res) => {
+  const category_id = req.params.category_id;
+  const cardId = parseInt(req.params.cardId);
+  const uid = req.user.id;
+  const admin = isAdmin(req);
+
+  if (!fav.hasCategory(category_id)) return res.sendStatus(404);
+  if (isNaN(cardId) || cardId < 0) return res.sendStatus(400);
+
+  const category = fav.getCategory(category_id, uid, admin);
+  const existing = fav.getCardById(category_id, cardId, uid, admin);
+  if (!category || !existing) return res.sendStatus(404);
+
+  const card_data = {};
+  category.requiredFields.forEach(field => {
+    card_data[field] = req.body[field] || "";
+  });
+
+  const errors = fav.validateCardData(category_id, card_data);
+
+  if (!admin && errors.length === 0 && fav.isDuplicateCardExcludingId(category_id, card_data, uid, cardId)) {
+    errors.push("Nie możesz zapisać zmian: masz już identyczny wpis w tej kategorii.");
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).render("edit_polubienie", {
+      title: "Edytuj wpis",
+      category,
+      card: { ...existing, ...card_data },
+      cardId,
+      errors
+    });
+  }
+
+  const ok = fav.updateCardById(cardId, card_data, uid, admin);
+  if (!ok) return res.sendStatus(404);
+
+  res.redirect(`/moje_polubione/${category_id}`);
+});
+
 
 app.get("/playlista", (req, res) => {
   const uid = userId(req);

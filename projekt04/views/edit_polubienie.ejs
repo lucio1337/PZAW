@@ -1,0 +1,54 @@
+<%- include("head.partial.ejs") %>
+
+<main>
+  <a href="/moje_polubione/<%= category.id %>">Powrót</a>
+  <h1><%= title %></h1>
+
+  <% if (locals.currentUser && locals.currentUser.isAdmin && card && card.ownerName) { %>
+    <p style="color:#666;">Wpis użytkownika: <strong><%= card.ownerName %></strong></p>
+  <% } %>
+
+  <% if (errors && errors.length > 0) { %>
+    <ul class="errors">
+      <% errors.forEach(err => { %>
+        <li><%= err %></li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <form action="/moje_polubione/<%= category.id %>/edit/<%= cardId %>" method="POST">
+    <% category.requiredFields.forEach(function(field){ %>
+      <div>
+        <label for="card_<%= field %>"><%= field.charAt(0).toUpperCase() + field.slice(1) %></label>
+        <% if (field === "ocena") { %>
+          <input
+            type="number"
+            name="<%= field %>"
+            id="card_<%= field %>"
+            required
+            min="1"
+            max="10"
+            step="0.1"
+            value="<%= card && card[field] != null ? card[field] : '' %>"
+          >
+        <% } else { %>
+          <input
+            type="text"
+            name="<%= field %>"
+            id="card_<%= field %>"
+            required
+            minlength="1"
+            maxlength="500"
+            value="<%= card && card[field] != null ? card[field] : '' %>"
+          >
+        <% } %>
+      </div>
+    <% }) %>
+
+    <br><br>
+    <button>Zapisz zmiany</button>
+  </form>
+</main>
+
+<%- include("foot.partial.ejs") %>
+
