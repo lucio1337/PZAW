@@ -44,39 +44,24 @@ function parseCookies(cookieHeader) {
 
 function createSession(user) {
   const sessionId = crypto.randomBytes(16).toString("hex");
-  sessions.set(sessionId, { id: user.id, username: user.username });
-  return sessionId;
+  const csrfToken = crypto.randomBytes(24).toString("hex");
+  sessions.set(sessionId, { id: user.id, username: user.username, csrfToken });
+  return { sessionId, csrfToken };
 }
 
 function setSessionCookie(res, sessionId) {
-  res.setHeader("Set-Cookie", `sessionId=${sessionId}; HttpOnly; Path=/`);
-}
-
-function isArgon2Hash(stored) {
-  return typeof stored === "string" && stored.startsWith("$argon2");
+  res.setHeader("Set-Cookie", [
+    `sessionId=${sessionId}; HttpOnly; SameSite=Strict; Path=/`,
+    `csrfAnon=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`,
+  ]);
 }
 
 async function hashPassword(password) {
-  // Keep PEPPER as app-level secret; Argon2 handles per-hash salt internally.
   return await argon2hash(password + PEPPER);
 }
 
-function verifyLegacySha256(password, stored) {
-  const parts = String(stored || "").split("$");
-  if (parts.length !== 2) return false;
-  const [salt, hash] = parts;
-  const checkHash = crypto
-    .createHash("sha256")
-    .update(salt + password + PEPPER)
-    .digest("hex");
-  return checkHash === hash;
-}
-
 async function verifyPassword(password, stored) {
-  if (isArgon2Hash(stored)) {
-    return await argon2verify(stored, password + PEPPER);
-  }
-  return verifyLegacySha256(password, stored);
+  return await argon2verify(stored, password + PEPPER);
 }
 
 function findUserByUsername(username) {
@@ -101,20 +86,62 @@ function getUserWithAdmin(sessionUser) {
   return { id: row.id, username: row.username, isAdmin: !!row.is_admin };
 }
 
+// ── Middleware: sesja + CSRF token w res.locals ──────────────────────────────
+
 app.use((req, res, next) => {
   const cookies = parseCookies(req.headers.cookie || "");
   const sessionId = cookies.sessionId;
+  const newCookies = [];
 
   if (sessionId && sessions.has(sessionId)) {
-    const sessionUser = sessions.get(sessionId);
-    req.user = getUserWithAdmin(sessionUser);
+    // Zalogowany — token z sesji serwerowej
+    const sessionData = sessions.get(sessionId);
+    req.user = getUserWithAdmin(sessionData);
+    req.sessionId = sessionId;
+    req.csrfToken = sessionData.csrfToken;
   } else {
+    // Niezalogowany — token anonimowy w osobnym ciasteczku
     req.user = null;
+    let anonToken = cookies.csrfAnon;
+    if (!anonToken) {
+      anonToken = crypto.randomBytes(24).toString("hex");
+      newCookies.push(`csrfAnon=${anonToken}; HttpOnly; SameSite=Strict; Path=/`);
+    }
+    req.csrfToken = anonToken;
+  }
+
+  if (newCookies.length > 0) {
+    res.setHeader("Set-Cookie", newCookies);
   }
 
   res.locals.currentUser = req.user;
+  res.locals.csrfToken = req.csrfToken;
   next();
 });
+
+// ── CSRF walidacja ───────────────────────────────────────────────────────────
+
+function validateCsrf(req, res, next) {
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
+
+  const tokenFromBody = req.body?._csrf;
+  const sessionToken = req.csrfToken;
+
+  if (
+    !sessionToken ||
+    !tokenFromBody ||
+    tokenFromBody.length !== sessionToken.length ||
+    !crypto.timingSafeEqual(Buffer.from(tokenFromBody), Buffer.from(sessionToken))
+  ) {
+    return res.status(403).send("Nieprawidłowy token CSRF");
+  }
+
+  next();
+}
+
+app.use(validateCsrf);
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function requireLogin(req, res, next) {
   if (!req.user) {
@@ -125,6 +152,8 @@ function requireLogin(req, res, next) {
 
 const userId = (req) => req.user ? req.user.id : null;
 const isAdmin = (req) => req.user && req.user.isAdmin;
+
+// ── Routes ───────────────────────────────────────────────────────────────────
 
 app.get("/", (req, res) => {
   const uid = userId(req);
@@ -198,8 +227,9 @@ app.post("/rejestracja", (req, res) => {
 
   (async () => {
     const user = await createUser(username, password);
-    const sessionId = createSession(user);
+    const { sessionId, csrfToken } = createSession(user);
     setSessionCookie(res, sessionId);
+    res.locals.csrfToken = csrfToken;
     res.redirect("/");
   })().catch(err => {
     console.error(err);
@@ -249,14 +279,9 @@ app.post("/logowanie", (req, res) => {
       });
     }
 
-    // Automatic upgrade: if a user logs in with legacy SHA-256 hash, re-hash with Argon2.
-    if (user && !isArgon2Hash(user.password) && verifyLegacySha256(password, user.password)) {
-      const newHash = await hashPassword(password);
-      db.prepare("UPDATE users SET password = ? WHERE id = ?").run(newHash, user.id);
-    }
-
-    const sessionId = createSession(user);
+    const { sessionId, csrfToken } = createSession(user);
     setSessionCookie(res, sessionId);
+    res.locals.csrfToken = csrfToken;
     res.redirect("/");
   })().catch(err => {
     console.error(err);
@@ -272,14 +297,13 @@ app.post("/logout", (req, res) => {
     sessions.delete(sessionId);
   }
 
-  res.setHeader(
-    "Set-Cookie",
-    "sessionId=; HttpOnly; Path=/; Max-Age=0"
-  );
+  res.setHeader("Set-Cookie", [
+    "sessionId=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+    "csrfAnon=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+  ]);
 
   res.redirect("/");
 });
-
 
 app.get("/moje_polubione/:category_id", (req, res) => {
   const category_id = req.params.category_id;
@@ -391,7 +415,6 @@ app.post("/moje_polubione/:category_id/edit/:cardId", requireLogin, (req, res) =
 
   res.redirect(`/moje_polubione/${category_id}`);
 });
-
 
 app.get("/playlista", (req, res) => {
   const uid = userId(req);

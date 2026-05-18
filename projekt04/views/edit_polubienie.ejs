@@ -17,6 +17,7 @@
   <% } %>
 
   <form action="/moje_polubione/<%= category.id %>/edit/<%= cardId %>" method="POST">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <% category.requiredFields.forEach(function(field){ %>
       <div>
         <label for="card_<%= field %>"><%= field.charAt(0).toUpperCase() + field.slice(1) %></label>

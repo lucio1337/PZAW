@@ -1,5 +1,6 @@
 <a href="/">Powrót na główną</a>
 <form action="/rejestracja" method="POST">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
   <div>
     <label for="username">Nazwa użytkownika</label>
     <input

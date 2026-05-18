@@ -18,6 +18,7 @@
 
   <% if (locals.currentUser) { %>
   <form action="/playlista" method="POST">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div>
       <label for="name">Nazwa playlisty:</label>
       <input type="text" id="name" name="name" value="<%= name %>">
@@ -63,6 +64,7 @@
         </a>
         <br>
         <form action="/playlista/delete/<%= idx %>" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń</button>
         </form>
       </li>

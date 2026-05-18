@@ -16,6 +16,7 @@
   <% } %>
 
   <form action="/playlista/edit/<%= idx %>" method="POST">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div>
       <label for="name">Nazwa playlisty:</label>
       <input type="text" id="name" name="name" value="<%= playlist.name %>">
@@ -36,6 +37,7 @@
   </form>
 
   <form action="/playlista/delete/<%= idx %>" method="POST">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
   </form>
 </main>

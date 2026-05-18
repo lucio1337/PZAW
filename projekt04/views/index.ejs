@@ -161,6 +161,7 @@
                     <button type="submit">Edytuj</button>
                   </form>
                   <form action="/moje_polubione/<%= category.id %>/delete/<%= index %>" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
                       Usuń
                     </button>
@@ -206,6 +207,7 @@
     <button type="submit">Edytuj playlistę</button>
   </form>
   <form action="/playlista/delete/<%= plIdx %>" method="POST" style="margin-top:0.5em;">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
   </form>
 <% } %>
