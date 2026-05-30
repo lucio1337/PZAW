@@ -1,7 +1,11 @@
 <%- include("head.partial.ejs") %>
 
 <main>
-  <h1><%= title %></h1>
+  <a href="/">Powrót na główną</a>
+  <h1 class="logo-container">
+    Logowanie do 
+    <img src="/img/baner.svg" alt="Logo Trackly" class="logo" style="width: auto; height: 1.8rem;">
+  </h1>
 
   <% if (errors && errors.length > 0) { %>
     <ul class="errors">
@@ -12,6 +16,7 @@
   <% } %>
 
   <%- include("forms/login.ejs") %>
+  <p>Nie masz jeszcze konta? <a href="/rejestracja">Zarejestruj się</a></p>
 </main>
 
 <%- include("foot.partial.ejs") %>

@@ -20,14 +20,14 @@ loadCategories();
 function getCardsForCategoryAndUser(categoryId, userId) {
   if (!userId) return [];
   const rows = db.prepare(
-    'SELECT id, tytuł, wykonawca, gatunek, ocena FROM cards WHERE category_id = ? AND user_id = ? ORDER BY id'
+    'SELECT id, tytuł, wykonawca, gatunek, ocena, spotify_url FROM cards WHERE category_id = ? AND user_id = ? ORDER BY id'
   ).all(categoryId, userId);
   return rows.map(row => toCard(row));
 }
 
 function getCardsForCategoryAll(categoryId) {
   const rows = db.prepare(`
-    SELECT c.id, c.tytuł, c.wykonawca, c.gatunek, c.ocena, u.username AS ownerName
+    SELECT c.id, c.tytuł, c.wykonawca, c.gatunek, c.ocena, c.spotify_url, u.username AS ownerName
     FROM cards c
     LEFT JOIN users u ON c.user_id = u.id
     WHERE c.category_id = ?
@@ -46,6 +46,7 @@ function toCard(row) {
   if (row.tytuł) card.tytuł = row.tytuł;
   if (row.wykonawca) card.wykonawca = row.wykonawca;
   if (row.gatunek) card.gatunek = row.gatunek;
+  if (row.spotify_url) card.spotify_url = row.spotify_url;
   return card;
 }
 
@@ -55,7 +56,7 @@ export function getCardById(categoryId, cardId, userId, isAdmin) {
 
   if (isAdmin) {
     const row = db.prepare(`
-      SELECT c.id, c.tytuł, c.wykonawca, c.gatunek, c.ocena, u.username AS ownerName
+      SELECT c.id, c.tytuł, c.wykonawca, c.gatunek, c.ocena, c.spotify_url, u.username AS ownerName
       FROM cards c
       LEFT JOIN users u ON c.user_id = u.id
       WHERE c.category_id = ? AND c.id = ?
@@ -68,7 +69,7 @@ export function getCardById(categoryId, cardId, userId, isAdmin) {
 
   if (!userId) return null;
   const row = db.prepare(`
-    SELECT id, tytuł, wykonawca, gatunek, ocena
+    SELECT id, tytuł, wykonawca, gatunek, ocena, spotify_url
     FROM cards
     WHERE category_id = ? AND id = ? AND user_id = ?
   `).get(categoryId, cardId, userId);
@@ -145,14 +146,15 @@ export function getCategory(categoryId, userId, isAdmin) {
 export function addCard(categoryId, card, userId) {
   if (!hasCategory(categoryId) || !userId) return;
   db.prepare(`
-    INSERT INTO cards (category_id, tytuł, wykonawca, gatunek, ocena, user_id)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO cards (category_id, tytuł, wykonawca, gatunek, ocena, spotify_url, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
     categoryId,
     card.tytuł || null,
     card.wykonawca || null,
     card.gatunek || null,
     card.ocena,
+    card.spotify_url || null,
     userId
   );
 }
@@ -187,6 +189,12 @@ export function validateCardData(categoryId, card) {
       errors.push("'ocena' musi być liczbą od 1 do 10 (może zawierać części dziesiętne)");
     }
   }
+  if (card.spotify_url && card.spotify_url.trim() !== '') {
+  const urlPattern = /^https:\/\/open\.spotify\.com\/(track|album|artist)\/[a-zA-Z0-9]+/;
+  if (!urlPattern.test(card.spotify_url.trim())) {
+    errors.push("Link Spotify musi zaczynać się od https://open.spotify.com/track/, /album/ lub /artist/");
+  }
+}
 
   return errors;
 }
@@ -237,12 +245,12 @@ export function updateCardById(cardId, card, userId, isAdmin) {
   const stmt = isAdmin
     ? db.prepare(`
         UPDATE cards
-        SET tytuł = ?, wykonawca = ?, gatunek = ?, ocena = ?
+        SET tytuł = ?, wykonawca = ?, gatunek = ?, ocena = ?, spotify_url = ?
         WHERE id = ?
       `)
     : db.prepare(`
         UPDATE cards
-        SET tytuł = ?, wykonawca = ?, gatunek = ?, ocena = ?
+        SET tytuł = ?, wykonawca = ?, gatunek = ?, ocena = ?, spotify_url = ?
         WHERE id = ? AND user_id = ?
       `);
 
@@ -252,6 +260,7 @@ export function updateCardById(cardId, card, userId, isAdmin) {
         card.wykonawca || null,
         card.gatunek || null,
         card.ocena,
+        card.spotify_url || null,
         cardId
       )
     : stmt.run(
@@ -259,6 +268,7 @@ export function updateCardById(cardId, card, userId, isAdmin) {
         card.wykonawca || null,
         card.gatunek || null,
         card.ocena,
+        card.spotify_url || null,
         cardId,
         userId
       );
@@ -430,6 +440,16 @@ export function getTopSongs(limit = 5) {
   return topByCaseInsensitiveFields('ulubione-utwory', ['tytuł', 'wykonawca'], limit);
 }
 
+export function getCardOwnerId(cardId) {
+  const row = db.prepare('SELECT user_id FROM cards WHERE id = ?').get(cardId);
+  return row ? row.user_id : null;
+}
+
+export function getPlaylistOwnerId(playlistId) {
+  const row = db.prepare('SELECT user_id FROM playlists WHERE id = ?').get(playlistId);
+  return row ? row.user_id : null;
+}
+
 export default {
   getCategorySummaries,
   hasCategory,
@@ -454,4 +474,6 @@ export default {
   getTopAlbums,
   getTopArtists,
   getTopSongs,
+  getCardOwnerId,
+  getPlaylistOwnerId
 };

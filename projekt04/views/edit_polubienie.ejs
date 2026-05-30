@@ -46,10 +46,23 @@
       </div>
     <% }) %>
 
-    <br><br>
+    <div>
+    <label for="spotify_url">
+      <img src="/img/spotify.svg" alt="Spotify">
+      Link Spotify (opcjonalnie)
+    </label><br>
+    <input
+      type="url"
+      name="spotify_url"
+      id="spotify_url"
+      maxlength="200"
+      value="<%= card?.spotify_url || '' %>"
+    >
+  </div>
+
+
     <button>Zapisz zmiany</button>
   </form>
 </main>
 
 <%- include("foot.partial.ejs") %>
-

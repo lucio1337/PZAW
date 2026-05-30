@@ -1,7 +1,7 @@
 <%- include("head.partial.ejs") %>
 
 <main>
-  <h1><%= title %></h1>
+  <img src="/img/baner.svg" alt="Logo Trackly" class="logo">
 
   <% if (!locals.currentUser) { %>
     <p><a href="/logowanie">Zaloguj się</a>, aby dodawać i przeglądać swoje ulubione albumy, utwory, artystów i playlisty.</p>
@@ -61,39 +61,45 @@
   <% } %>
 
   <% if (categories.length === 0) { %>
-    <p>Nie masz jeszcze żadnych kategorii.</p>
+    <p>Brak kategorii.</p>
   <% } else { %>
     <% if (locals.currentUser) { %>
-    <details class="rolled-menu">
-      <summary class="rolled-menu__summary">Menu zarządzania</summary>
-      <div class="rolled-menu__content">
-        <div class="rolled-menu__section">
-          <div class="rolled-menu__title">Kategorie</div>
-          <ul class="rolled-menu__list">
-            <% categories.forEach(cat => { %>
-              <li><a href="/moje_polubione/<%= cat.id %>"><%= cat.title %></a></li>
-            <% }) %>
-          </ul>
-        </div>
+      <details class="rolled-menu">
+        <summary class="rolled-menu__summary">Menu zarządzania</summary>
+        <div class="rolled-menu__content">
+          <div class="rolled-menu__section">
+            <div class="rolled-menu__title">Kategorie</div>
+            <ul class="rolled-menu__list">
+              <% categories.forEach(cat => { %>
+                <li><a href="/moje_polubione/<%= cat.id %>"><%= cat.title %></a></li>
+              <% }) %>
+            </ul>
+          </div>
 
-        <div class="rolled-menu__section">
-          <div class="rolled-menu__title">Playlisty</div>
-          <ul class="rolled-menu__list">
-            <li><a href="/playlista">Tworzenie nowej playlisty</a></li>
-          </ul>
+          <div class="rolled-menu__section">
+            <div class="rolled-menu__title">Playlisty</div>
+            <ul class="rolled-menu__list">
+              <li><a href="/playlista">Tworzenie nowej playlisty</a></li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </details>
+      </details>
     <% } %>
   <% } %>
 
-  
+  <% if (locals.currentUser) { %>
+    <% const hasAnyCards = categories.some(cat => cat.cards && cat.cards.length > 0); %>
+    <% if (!hasAnyCards) { %>
+      <p>Nie masz jeszcze żadnych wpisów. Przejdź do kategorii w menu zarządzania, aby dodać swoje ulubione utwory, albumy lub artystów.</p>
+    <% } %>
+  <% } %>
+
   <% categories.forEach(category => { %>
     <% if (category.cards && category.cards.length > 0) { %>
-      <% if (category.title=="ulubieni artyści") { %>
-      <h2>Twoi <%= category.title %></h2>
+      <% if (category.title === "Ulubieni artyści") { %>
+        <h2>Twoi <%= category.title %></h2>
       <% } else { %>
-      <h2>Twoje <%= category.title %></h2>
+        <h2>Twoje <%= category.title %></h2>
       <% } %>
 
       <div class="sort-controls">
@@ -131,40 +137,63 @@
             <% if (locals.currentUser && locals.currentUser.isAdmin) { %>
               <th>Właściciel</th>
             <% } %>
-
-              <th>Szybka akcja</th>
+            <th>Szybka akcja</th>
           </tr>
         </thead>
 
         <tbody>
           <% category.cards.forEach(function(card, index){ %>
-            <tr>
-              <% if (card.tytuł) { %>
-                <td><%= card.tytuł %></td>
+            <tr style="cursor:pointer;" onclick="openModalFromBtn(this)"
+              data-tytul="<%= card.tytuł || '' %>"
+              data-wykonawca="<%= card.wykonawca || '' %>"
+              data-gatunek="<%= card.gatunek || '' %>"
+              data-ocena="<%= card.ocena %>"
+              data-spotify="<%= card.spotify_url || '' %>"
+              data-cardid="<%= card.id %>"
+              data-categoryid="<%= category.id %>"
+            >
+              <% if (category.requiredFields.includes("tytuł")) { %>
+                <td>
+                  <% if (card.spotify_url) { %>
+                    <a href="<%= card.spotify_url %>" target="_blank" rel="noopener" class="spotify-link" onclick="event.stopPropagation()">
+                      <%= card.tytuł || '-' %>
+                      <img src="/img/spotify.svg" alt="Spotify">
+                    </a>
+                  <% } else { %>
+                    <%= card.tytuł || '-' %>
+                  <% } %>
+                </td>
               <% } %>
-              <% if (card.wykonawca) { %>
-                <td><%= card.wykonawca %></td>
+              <% if (category.requiredFields.includes("wykonawca")) { %>
+                <td>
+                  <% if (card.spotify_url && !category.requiredFields.includes('tytuł')) { %>
+                    <a href="<%= card.spotify_url %>" target="_blank" rel="noopener" class="spotify-link" onclick="event.stopPropagation()">
+                      <img src="/img/spotify.svg" alt="Spotify">
+                      <%= card.wykonawca || '-' %>
+                    </a>
+                  <% } else { %>
+                    <%= card.wykonawca || '-' %>
+                  <% } %>
+                </td>
               <% } %>
-              <% if (card.gatunek) { %>
-                <td><%= card.gatunek %></td>
+              <% if (category.requiredFields.includes("gatunek")) { %>
+                <td><%= card.gatunek || '-' %></td>
               <% } %>
-              <% if (card.ocena) { %>
-                <td><%= card.ocena %></td>
+              <% if (category.requiredFields.includes("ocena")) { %>
+                <td><%= card.ocena || '-' %></td>
               <% } %>
               <% if (locals.currentUser && locals.currentUser.isAdmin) { %>
                 <td><%= card.ownerName || '-' %></td>
               <% } %>
 
-              <td>
+              <td onclick="event.stopPropagation()">
                 <% if (locals.currentUser) { %>
-                  <form action="/moje_polubione/<%= category.id %>/edit/<%= card.id %>" method="GET" style="display:inline;">
+                  <form action="/moje_polubione/<%= category.id %>/edit/<%= card.id %>" method="GET" style="display:inline; margin-top:0.5em;">
                     <button type="submit">Edytuj</button>
                   </form>
-                  <form action="/moje_polubione/<%= category.id %>/delete/<%= index %>" method="POST">
+                  <form action="/moje_polubione/<%= category.id %>/delete/<%= index %>" method="POST" style="margin-top:0.5em;">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
-                      Usuń
-                    </button>
+                    <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?');">Usuń</button>
                   </form>
                 <% } %>
               </td>
@@ -194,7 +223,7 @@
               <tr>
                 <td><%= song.tytuł %></td>
                 <td><%= song.wykonawca %></td>
-                <td><%= song.gatunek || "-" %></td>
+                <td><%= song.gatunek || "—" %></td>
               </tr>
             <% }) %>
           </tbody>
@@ -202,19 +231,19 @@
       <% } else { %>
         <p>Brak utworów w tej playliście.</p>
       <% } %>
-      <% if (locals.currentUser || locals.currentUser.isAdmin) { %>
-  <form action="/playlista/edit/<%= plIdx %>" method="GET" style="margin-top:0.5em;">
-    <button type="submit">Edytuj playlistę</button>
-  </form>
-  <form action="/playlista/delete/<%= plIdx %>" method="POST" style="margin-top:0.5em;">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
-  </form>
-<% } %>
+      <% if (locals.currentUser) { %>
+        <form action="/playlista/edit/<%= plIdx %>" method="GET" style="margin-top:0.5em;">
+          <button type="submit">Edytuj playlistę</button>
+        </form>
+        <form action="/playlista/delete/<%= plIdx %>" method="POST" style="margin-top:0.5em;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć tę playlistę?');">Usuń playlistę</button>
+        </form>
+      <% } %>
       <br>
     <% }) %>
   <% } %>
-  
+
 </main>
 
 <%- include("foot.partial.ejs") %>

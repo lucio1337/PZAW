@@ -3,7 +3,6 @@
 <main>
   <a href="/">Powrót</a>
   <h1><%= title %></h1>
-  
 
   <div>
     <strong>Sortuj według oceny:</strong>
@@ -34,16 +33,34 @@
 
     <tbody>
       <% category.cards.forEach(function(card, index){ %>
-        <tr>
+        <tr style="cursor:pointer;" onclick="openModalFromBtn(this)"
+          data-tytul="<%= card.tytuł || '' %>"
+          data-wykonawca="<%= card.wykonawca || '' %>"
+          data-gatunek="<%= card.gatunek || '' %>"
+          data-ocena="<%= card.ocena %>"
+          data-spotify="<%= card.spotify_url || '' %>"
+          data-cardid="<%= card.id %>"
+          data-categoryid="<%= category.id %>"
+        >
           <% category.requiredFields.forEach(field => { %>
-            <td><%= card[field] || '—' %></td>
+            <td>
+              <% const value = card[field] || '-'; %>
+              <% if (card.spotify_url && field === (category.requiredFields.includes('tytuł') ? 'tytuł' : 'wykonawca')) { %>
+                <a href="<%= card.spotify_url %>" target="_blank" rel="noopener" class="spotify-link" onclick="event.stopPropagation()">
+                  <%= value %>
+                  <img src="/img/spotify.svg" alt="Spotify">
+                </a>
+              <% } else { %>
+                <%= value %>
+              <% } %>
+            </td>
           <% }) %>
 
           <% if (locals.currentUser && locals.currentUser.isAdmin) { %>
-            <td><%= card.ownerName || '—' %></td>
+            <td><%= card.ownerName || '-' %></td>
           <% } %>
 
-          <td style="white-space:nowrap;">
+          <td style="white-space:nowrap;" onclick="event.stopPropagation()">
             <% if (locals.currentUser) { %>
               <form action="/moje_polubione/<%= category.id %>/edit/<%= card.id %>" method="GET" style="display:inline;">
                 <button type="submit">Edytuj</button>
@@ -53,7 +70,7 @@
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               </form>
             <% } else { %>
-              —
+              -
             <% } %>
           </td>
         </tr>

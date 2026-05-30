@@ -13,6 +13,20 @@ db.pragma('foreign_keys = ON');
 
 export function initializeDatabase() {
   db.exec(`
+  CREATE TABLE IF NOT EXISTS admin_actions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_id INTEGER NOT NULL,
+    target_user_id INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    details TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    seen INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE
+  )
+`);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS categories (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -39,6 +53,7 @@ export function initializeDatabase() {
       gatunek TEXT,
       ocena TEXT NOT NULL,
       user_id INTEGER NOT NULL,
+      spotify_url TEXT,
       FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
@@ -62,6 +77,27 @@ export function initializeDatabase() {
       FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE CASCADE
     )
   `);
+
+  const insertCategory = db.prepare(`
+    INSERT OR IGNORE INTO categories (id, title, required_fields)
+    VALUES (?, ?, ?)
+  `);
+
+  insertCategory.run(
+    'ulubione-utwory',
+    'Ulubione utwory',
+    JSON.stringify(['tytuł', 'wykonawca', 'gatunek', 'ocena'])
+  );
+  insertCategory.run(
+    'ulubione-albumy',
+    'Ulubione albumy',
+    JSON.stringify(['tytuł', 'wykonawca', 'gatunek', 'ocena'])
+  );
+  insertCategory.run(
+    'ulubieni-artysci',
+    'Ulubieni artyści',
+    JSON.stringify(['wykonawca', 'ocena'])
+  );
 }
 
 export default db;

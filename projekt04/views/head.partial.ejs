@@ -25,3 +25,18 @@
         <% } %>
       </nav>
     </header>
+    <% if (locals.adminNotifications && adminNotifications.length > 0) { %>
+  <div class="admin-notice">
+    <button class="admin-notice__close" onclick="document.querySelector('.admin-notice').style.display='none'" title="Zamknij">✕</button>
+    <strong>⚠️ Administrator wykonał następujące zmiany na Twoim koncie:</strong>
+    <ul>
+      <% adminNotifications.forEach(n => { %>
+        <li>
+          <strong><%= n.adminName %></strong> - <%= n.action %>
+          <% if (n.details) { %> (<%= n.details %>)<% } %>
+          <span class="admin-notice__date"><%= n.created_at %> UTC</span>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+<% } %>

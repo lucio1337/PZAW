@@ -1,8 +1,9 @@
 <%- include("head.partial.ejs") %>
 
 <main>
-  <h1><%= title %></h1>
   <a href="/">Powrót do wszystkich kategorii</a>
+  <h1><%= title %></h1>
+
 
   <% if (!locals.currentUser) { %>
     <p><a href="/logowanie">Zaloguj się</a>, aby tworzyć i zarządzać playlistami.</p>
@@ -41,7 +42,7 @@
 
 
 <% if (playlists.length > 0) { %>
-  <br><br>
+  <br><hr><br>
   <h2>Twoje playlisty</h2>
   <ul class="playlists-list">
     <% playlists.forEach((pl, idx) => { %>
@@ -69,7 +70,7 @@
         </form>
       </li>
       <% if (idx < playlists.length - 1) { %>
-        <hr style="border-color: rgb(60, 60, 60); margin: 1.5% 0;">
+        <hr><br>
       <% } %>
     <% }) %>
   </ul>

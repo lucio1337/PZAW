@@ -5,7 +5,10 @@ import { hash as argon2hash, verify as argon2verify } from "@node-rs/argon2";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fav from "./models/favourite.js";
-import db from "./database.js";
+import db, { initializeDatabase } from "./database.js";
+import { logAdminAction, getUnseenAdminActions, markAdminActionsAsSeen } from './models/adminLog.js';
+
+initializeDatabase();
 
 const port = 8000;
 const app = express();
@@ -94,13 +97,11 @@ app.use((req, res, next) => {
   const newCookies = [];
 
   if (sessionId && sessions.has(sessionId)) {
-    // Zalogowany — token z sesji serwerowej
     const sessionData = sessions.get(sessionId);
     req.user = getUserWithAdmin(sessionData);
     req.sessionId = sessionId;
     req.csrfToken = sessionData.csrfToken;
   } else {
-    // Niezalogowany — token anonimowy w osobnym ciasteczku
     req.user = null;
     let anonToken = cookies.csrfAnon;
     if (!anonToken) {
@@ -116,6 +117,16 @@ app.use((req, res, next) => {
 
   res.locals.currentUser = req.user;
   res.locals.csrfToken = req.csrfToken;
+
+  if (req.user && !req.user.isAdmin) {
+    res.locals.adminNotifications = getUnseenAdminActions(req.user.id);
+    if (res.locals.adminNotifications.length > 0) {
+      markAdminActionsAsSeen(req.user.id);
+    }
+  } else {
+    res.locals.adminNotifications = [];
+  }
+
   next();
 });
 
@@ -177,7 +188,7 @@ app.get("/", (req, res) => {
   });
 
   res.render("index", {
-    title: "Moja ulubiona muzyka",
+    title: "Trackly",
     categories,
     playlists: fav.getPlaylists(uid, admin),
     top: {
@@ -188,11 +199,20 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/odkryj_trackly", (req, res) => {
+  if (req.user) return res.redirect("/");
+  res.render("about", {
+    title: "Odkryj Trackly"
+  });
+});
+
+
+
 app.get("/rejestracja", (req, res) => {
   if (req.user) return res.redirect("/");
 
   res.render("register", {
-    title: "Rejestracja",
+    title: "Rejestracja do Trackly",
     errors: [],
     username: ""
   });
@@ -219,7 +239,7 @@ app.post("/rejestracja", (req, res) => {
 
   if (errors.length > 0) {
     return res.status(400).render("register", {
-      title: "Rejestracja",
+      title: "Rejestracja do Trackly",
       errors,
       username: username || ""
     });
@@ -241,7 +261,7 @@ app.get("/logowanie", (req, res) => {
   if (req.user) return res.redirect("/");
 
   res.render("login", {
-    title: "Logowanie",
+    title: "Logowanie do Trackly",
     errors: [],
     username: ""
   });
@@ -273,7 +293,7 @@ app.post("/logowanie", (req, res) => {
 
     if (errors.length > 0) {
       return res.status(400).render("login", {
-        title: "Logowanie",
+        title: "Logowanie do Trackly",
         errors,
         username: username || ""
       });
@@ -335,6 +355,7 @@ app.post("/moje_polubione/:category_id/new", requireLogin, (req, res) => {
   category.requiredFields.forEach(field => {
     card_data[field] = req.body[field] || "";
   });
+  card_data.spotify_url = req.body.spotify_url || "";
 
   const errors = fav.validateCardData(category_id, card_data);
   if (errors.length === 0 && fav.isDuplicateCard(category_id, card_data, uid)) {
@@ -394,6 +415,8 @@ app.post("/moje_polubione/:category_id/edit/:cardId", requireLogin, (req, res) =
     card_data[field] = req.body[field] || "";
   });
 
+  card_data.spotify_url = req.body.spotify_url || "";
+
   const errors = fav.validateCardData(category_id, card_data);
 
   if (!admin && errors.length === 0 && fav.isDuplicateCardExcludingId(category_id, card_data, uid, cardId)) {
@@ -412,6 +435,14 @@ app.post("/moje_polubione/:category_id/edit/:cardId", requireLogin, (req, res) =
 
   const ok = fav.updateCardById(cardId, card_data, uid, admin);
   if (!ok) return res.sendStatus(404);
+
+  if (admin) {
+    const ownerId = fav.getCardOwnerId(cardId);
+    if (ownerId && ownerId !== uid) {
+      logAdminAction(uid, ownerId, "edycja wpisu",
+        `Kategoria: ${category_id}, wpis ID: ${cardId}`);
+    }
+  }
 
   res.redirect(`/moje_polubione/${category_id}`);
 });
@@ -472,6 +503,15 @@ app.post("/playlista/delete/:idx", requireLogin, (req, res) => {
 
   if (isNaN(index) || index < 0 || index >= playlists.length) {
     return res.sendStatus(400);
+  }
+
+  // Loguj jeśli admin usuwa czyjąś playlistę
+  if (admin) {
+    const playlist = playlists[index];
+    if (playlist.ownerId && playlist.ownerId !== uid) {
+      logAdminAction(uid, playlist.ownerId, "usunięcie playlisty",
+        `Playlista: ${playlist.name}`);
+    }
   }
 
   fav.deletePlaylist(index, uid, admin);
@@ -542,6 +582,13 @@ app.post("/playlista/edit/:idx", requireLogin, (req, res) => {
   }
 
   fav.updatePlaylist(index, name, songs, uid, admin);
+
+  // Loguj jeśli admin edytuje czyjąś playlistę
+  if (admin && playlist.ownerId && playlist.ownerId !== uid) {
+    logAdminAction(uid, playlist.ownerId, "edycja playlisty",
+      `Playlista: ${playlist.name}`);
+  }
+
   res.redirect("/playlista");
 });
 
@@ -558,10 +605,19 @@ app.post("/moje_polubione/:category_id/delete/:idx", requireLogin, (req, res) =>
 
   if (admin) {
     const cardId = fav.getCardIdAtCategoryIndex(category_id, index, true);
-    if (cardId != null) fav.deleteCardById(cardId);
+    if (cardId != null) {
+      // Loguj jeśli admin usuwa czyjąś kartę
+      const ownerId = fav.getCardOwnerId(cardId);
+      if (ownerId && ownerId !== uid) {
+        logAdminAction(uid, ownerId, "usunięcie wpisu",
+          `Kategoria: ${category_id}, wpis ID: ${cardId}`);
+      }
+      fav.deleteCardById(cardId);
+    }
   } else {
     fav.deleteCard(category_id, index, uid);
   }
+
   const referer = req.get("Referer") || "";
   if (referer.includes("/moje_polubione/")) {
     res.redirect(`/moje_polubione/${category_id}`);
