@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed": "node seeder.js",
-    "create-admin": "node create_admin.js"
+    "create-admin": "node create_admin.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",

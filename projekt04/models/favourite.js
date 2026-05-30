@@ -174,14 +174,20 @@ export function validateCardData(categoryId, card) {
       errors.push(`Brakuje pola '${field}'`);
     } else {
       if (field !== 'ocena') {
-        if (typeof card[field] !== 'string') {
-          errors.push(`Pole '${field}' powinno być tekstem`);
-        } else if (card[field].length < 1 || card[field].length > 500) {
-          errors.push(`Pole '${field}' powinno mieć długość 1-500`);
-        }
+    if (typeof card[field] !== 'string') {
+      errors.push(`Pole '${field}' powinno być tekstem`);
+    } else {
+      const value = card[field].trim();
+
+      if (value.length < 1) {
+        errors.push(`Pole '${field}' nie może być puste ani zawierać samych spacji`);
+      } else if (value.length > 500) {
+        errors.push(`Pole '${field}' powinno mieć długość 1-500`);
       }
     }
+    }
   }
+}
 
   if (card.ocena) {
     const r = parseFloat(card.ocena);
@@ -256,19 +262,19 @@ export function updateCardById(cardId, card, userId, isAdmin) {
 
   const info = isAdmin
     ? stmt.run(
-        card.tytuł || null,
-        card.wykonawca || null,
-        card.gatunek || null,
-        card.ocena,
-        card.spotify_url || null,
+        (card.tytuł?.trim()) || null,
+        (card.wykonawca?.trim()) || null,
+        (card.gatunek?.trim()) || null,
+        (card.ocena?.trim()) || null,
+        (card.spotify_url?.trim()) || null,
         cardId
       )
     : stmt.run(
-        card.tytuł || null,
-        card.wykonawca || null,
-        card.gatunek || null,
-        card.ocena,
-        card.spotify_url || null,
+        (card.tytuł?.trim()) || null,
+        (card.wykonawca?.trim()) || null,
+        (card.gatunek?.trim()) || null,
+        (card.ocena?.trim()) || null,
+        (card.spotify_url?.trim()) || null,
         cardId,
         userId
       );
