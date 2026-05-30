@@ -1,0 +1,21 @@
+<%- include("head.partial.ejs") %>
+
+
+
+<main>
+    <a href="/">Powrót do głównej</a>
+    <h1><%= title %></h1>
+<p>Podczas rejestracji użytkownik podaje nazwę użytkownika oraz hasło. Hasła nie są przechowywane w postaci jawnej i są zabezpieczane przy użyciu funkcji skrótu.</p>
+<h2>Spotify</h2>
+
+<p>Nasza strona umożliwia użytkownikom dodawanie odnośników do serwisu Spotify. W przypadku dodania linku Spotify możemy wyświetlać oficjalny odtwarzacz Spotify (Spotify Embed) dostarczany przez Spotify.
+
+Wyświetlenie osadzonego odtwarzacza powoduje nawiązanie połączenia pomiędzy przeglądarką użytkownika a serwerami Spotify. W związku z tym Spotify może otrzymywać informacje techniczne, takie jak adres IP, informacje o urządzeniu, przeglądarce oraz dane związane z wyświetleniem osadzonej treści.
+
+Nie uzyskujemy dostępu do danych logowania użytkownika w Spotify ani nie pobieramy informacji z jego konta Spotify. Linki Spotify są dodawane dobrowolnie przez użytkowników i przechowywane wyłącznie w celu prezentowania ich w ramach serwisu.
+
+Więcej informacji na temat przetwarzania danych przez Spotify można znaleźć w polityce prywatności Spotify.</p>
+</main>
+
+
+<%- include("foot.partial.ejs") %>

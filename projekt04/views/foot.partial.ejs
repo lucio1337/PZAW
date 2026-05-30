@@ -115,11 +115,6 @@ function closeModal() {
   }, 220);
 }
 
-function closeModal() {
-  document.getElementById('modal-overlay').style.display = 'none';
-  document.getElementById('modal-spotify-iframe').src = '';
-  document.body.style.overflow = '';
-}
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
@@ -128,6 +123,6 @@ document.addEventListener('keydown', e => {
 
 </body>
 <footer>
-  <p>&copy; 2026 Trackly. Wszelkie prawa zastrzeżone.<br><a href="/odkryj_trackly">O projekcie</a></p>
+  <p>&copy; 2026 Trackly. Wszelkie prawa zastrzeżone.<br><a href="/odkryj_trackly">O projekcie</a> | <a href="/polityka_prywatnosci">Polityka prywatności</a></p>
 </footer>
 </html>

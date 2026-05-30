@@ -200,13 +200,19 @@ app.get("/", (req, res) => {
 });
 
 app.get("/odkryj_trackly", (req, res) => {
-  if (req.user) return res.redirect("/");
+
   res.render("about", {
     title: "Odkryj Trackly"
   });
 });
 
+app.get("/polityka_prywatnosci", (req, res) => {
 
+
+  res.render("privacy_policy", {
+    title: "Polityka prywatności"
+  });
+});
 
 app.get("/rejestracja", (req, res) => {
   if (req.user) return res.redirect("/");
@@ -217,6 +223,7 @@ app.get("/rejestracja", (req, res) => {
     username: ""
   });
 });
+
 
 app.post("/rejestracja", (req, res) => {
   const { username, password } = req.body;
