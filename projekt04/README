@@ -1,4 +1,4 @@
-# Moja ulubiona muzyka
+# Trackly - Twoja muzyczna oaza
 
 Aplikacja webowa pozwalająca na zarządzanie ulubionymi utworami muzycznymi, artystami, albumami oraz playlistami.  
 
@@ -10,6 +10,8 @@ Zalogowany użytkownik może:
 - Usuwać i edytować playlisty 
 - Oglądać i edytować tylko swoje wpisy
 - Może zobaczyć czego ludzie dodają do ulubionych najczęściej
+- Dodawać linki do Spotify, które będą wyświetlane jako oficjalny odtwarzacz Spotify (Spotify Embed)
+- Widzi jakie zmiany wykonał admin na jego wpisach
 
 Niezalogowany użytkownik ma tylko opcje stworzenia konta lub zalogowania oraz obejrzenia jakie rzeczy są najczęściej dodawane do ulubionych.
 

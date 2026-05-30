@@ -156,8 +156,8 @@
                 <td>
                   <% if (card.spotify_url) { %>
                     <a href="<%= card.spotify_url %>" target="_blank" rel="noopener" class="spotify-link" onclick="event.stopPropagation()">
-                      <%= card.tytuł || '-' %>
                       <img src="/img/spotify.svg" alt="Spotify">
+                      <%= card.tytuł || '-' %>
                     </a>
                   <% } else { %>
                     <%= card.tytuł || '-' %>

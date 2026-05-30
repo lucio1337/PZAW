@@ -47,8 +47,8 @@
               <% const value = card[field] || '-'; %>
               <% if (card.spotify_url && field === (category.requiredFields.includes('tytuł') ? 'tytuł' : 'wykonawca')) { %>
                 <a href="<%= card.spotify_url %>" target="_blank" rel="noopener" class="spotify-link" onclick="event.stopPropagation()">
-                  <%= value %>
                   <img src="/img/spotify.svg" alt="Spotify">
+                  <%= value %>
                 </a>
               <% } else { %>
                 <%= value %>
