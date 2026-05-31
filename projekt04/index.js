@@ -191,6 +191,7 @@ app.get("/", (req, res) => {
     title: "Trackly",
     categories,
     playlists: fav.getPlaylists(uid, admin),
+    playlistsJson: JSON.stringify(fav.getPlaylists(uid, admin) || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e'),
     top: {
       albums: fav.getTopAlbums(5),
       artists: fav.getTopArtists(5),
@@ -347,7 +348,8 @@ app.get("/moje_polubione/:category_id", (req, res) => {
 
   res.render("category", {
     title: category.title,
-    category: { ...category, cards }
+    category: { ...category, cards },
+    playlistsJson: JSON.stringify(fav.getPlaylists(userId(req), isAdmin(req)) || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
   });
 });
 
@@ -598,6 +600,42 @@ app.post("/playlista/edit/:idx", requireLogin, (req, res) => {
 
   res.redirect("/playlista");
 });
+
+app.post("/playlista/:id/dodaj-utwor", requireLogin, (req, res) => {
+  const playlistId = parseInt(req.params.id);
+  const { song_tytul } = req.body;
+  const uid = req.user.id;
+  const admin = isAdmin(req);
+  const playlists = fav.getPlaylists(uid, admin);
+
+  const playlist = playlists.find(p => p.id === playlistId);
+  if (!playlist) return res.sendStatus(404);
+  if (!song_tytul) return res.sendStatus(400);
+
+  if (fav.isSongInPlaylist(playlistId, song_tytul)) {
+    return res.json({ success: false, message: 'Ten utwór jest już w tej playliście.' });
+  }
+
+  fav.addSongToPlaylist(playlistId, song_tytul);
+  res.json({ success: true });
+});
+
+
+app.get("/playlista/zawiera-utwor", requireLogin, (req, res) => {
+  const songTytul = req.query.tytul;
+  const uid = req.user.id;
+  const admin = isAdmin(req);
+  const playlists = fav.getPlaylists(uid, admin);
+
+  const result = playlists.map(p => ({
+    id: p.id,
+    name: p.name,
+    hasSong: fav.isSongInPlaylist(p.id, songTytul),
+  }));
+
+  res.json(result);
+});
+
 
 app.post("/moje_polubione/:category_id/delete/:idx", requireLogin, (req, res) => {
   const category_id = req.params.category_id;

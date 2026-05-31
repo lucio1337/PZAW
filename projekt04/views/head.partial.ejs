@@ -17,7 +17,7 @@
           <span>Zalogowany jako <strong><%= currentUser.username %></strong><% if (currentUser.isAdmin) { %> <em>(Admin)</em><% } %></span>
           <form action="/logout" method="POST" style="display: inline;">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button type="submit">Wyloguj</button>
+            <button type="submit" onclick="return confirm('Czy na pewno chcesz się wylogować?');">Wyloguj</button>
           </form>
         <% } else { %>
           <a href="/logowanie">Logowanie</a> 

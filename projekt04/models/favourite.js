@@ -196,9 +196,18 @@ export function validateCardData(categoryId, card) {
     }
   }
   if (card.spotify_url && card.spotify_url.trim() !== '') {
+  const url = card.spotify_url.trim();
   const urlPattern = /^https:\/\/open\.spotify\.com\/(track|album|artist)\/[a-zA-Z0-9]+/;
-  if (!urlPattern.test(card.spotify_url.trim())) {
+  
+  if (!urlPattern.test(url)) {
     errors.push("Link Spotify musi zaczynać się od https://open.spotify.com/track/, /album/ lub /artist/");
+  } else {
+    const type = url.match(/open\.spotify\.com\/(track|album|artist)\//)?.[1];
+    const Lengths = { track: 73, album: 79, artist: 80 };
+    const max = Lengths[type];
+    if (url.length !== max) {
+      errors.push(`Link Spotify dla ${type === 'track' ? 'utworu' : type === 'album' ? 'albumu' : 'artysty'} niepoprawny.`);
+    }
   }
 }
 
@@ -361,6 +370,18 @@ export function updatePlaylist(idx, name, songs, userId, isAdmin) {
   });
 }
 
+export function addSongToPlaylist(playlistId, songTytul) {
+  db.prepare('INSERT INTO playlist_songs (playlist_id, song_tytuł) VALUES (?, ?)')
+    .run(playlistId, songTytul);
+}
+
+export function isSongInPlaylist(playlistId, songTytul) {
+  const row = db.prepare(
+    'SELECT 1 FROM playlist_songs WHERE playlist_id = ? AND song_tytuł = ?'
+  ).get(playlistId, songTytul);
+  return !!row;
+}
+
 export function deleteCard(categoryId, idx, userId) {
   return removeCard(categoryId, idx, userId);
 }
@@ -481,5 +502,7 @@ export default {
   getTopArtists,
   getTopSongs,
   getCardOwnerId,
-  getPlaylistOwnerId
+  getPlaylistOwnerId,
+  addSongToPlaylist,
+  isSongInPlaylist
 };

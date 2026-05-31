@@ -45,7 +45,7 @@ main {
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
     border-radius: var(--radius);
-    padding: 22px;
+    padding: 30px;
     text-align: center;
     width: 90%;
 
@@ -127,7 +127,7 @@ input[type="text"],
 input[type="number"],
 input[type="password"],
 input[type="url"], 
-button {
+button{
     padding: 7px 15px;
     border-radius: 12px;
     font-size: 100%;
@@ -149,8 +149,8 @@ nav > form > button{
 input[type="text"],
 input[type="number"],
 input[type="password"],
-input[type="url"] {
-    width: 15%;
+input[type="url"]{
+    width: 180px;
     background: var(--panel-2);
     border: 1px solid var(--border);
     color: var(--text);
@@ -164,7 +164,6 @@ input[type="url"]:focus{
     border-color: rgba(34,211,238,0.55);
     box-shadow: 0 0 0 4px rgba(34,211,238,0.12);
 }
-
 
 
 button {
@@ -221,6 +220,8 @@ table th, table td {
     border: 1px solid var(--border);
     text-overflow: ellipsis;
     color: var(--text);
+    vertical-align: middle;
+    line-height: 1.3;
 }
 
 
@@ -495,11 +496,15 @@ nav button{
 td > a, label[for="spotify_url"] {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    vertical-align: middle;
 }
-a > img, label > img{
+
+a > img, label > img {
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
+    display: block;
 }
 
 footer{
@@ -528,7 +533,7 @@ h1 > img{
 
 
 .modal-overlay {
-    transition: opacity 0.5s ease;
+    transition: opacity 0.25s ease;
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.55);
@@ -553,7 +558,7 @@ h1 > img{
     position: relative;
     max-height: 90vh;
     overflow-y: auto;
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
 }
 
 .modal__close {
@@ -628,9 +633,75 @@ h1 > img{
 
 .modal__actions {
     display: flex;
+    flex-direction: column;
     gap: 10px;
     margin-top: 20px;
+    align-items: center;
+    width: 100%;
+}
+
+.modal__actions > div {
+    width: 100%;
+    display: flex;
     justify-content: center;
+    gap: 10px;
+}
+
+.modal-playlist-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.modal-playlist-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.modal-playlist-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-playlist-select {
+    flex: 1;
+    max-width: 300px;
+    padding: 7px 30px 7px 12px;
+    border-radius: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2322d3ee' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.modal-playlist-select:focus {
+    border-color: rgba(34,211,238,0.55);
+    box-shadow: 0 0 0 4px rgba(34,211,238,0.12);
+}
+
+.modal-playlist-select option {
+    background: var(--panel);
+    color: var(--text);
 }
 
 

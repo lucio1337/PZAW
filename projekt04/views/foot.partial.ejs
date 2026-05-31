@@ -19,110 +19,190 @@
     </div>
 
     <div class="modal__spotify" id="modal-spotify" style="display:none;">
-      <iframe
-        id="modal-spotify-iframe"
-        style="border-radius:12px"
-        width="100%"
-        height="352"
-        frameBorder="0"
-        allowfullscreen=""
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      <iframe id="modal-spotify-iframe" style="border-radius:12px" width="100%" height="352" frameBorder="0"
+        allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
         loading="lazy">
       </iframe>
     </div>
 
     <div class="modal__actions" id="modal-actions"></div>
+    <div id="modal-playlist-msg" style="margin-top:8px; font-size:0.9rem; text-align:center;"></div>
   </div>
 </div>
 
 <script>
-function openModalFromBtn(btn) {
-  openModal(
-    btn.dataset.tytul,
-    btn.dataset.wykonawca,
-    btn.dataset.gatunek,
-    btn.dataset.ocena,
-    btn.dataset.spotify,
-    btn.dataset.cardid,
-    btn.dataset.categoryid
-  );
-}
+  function openModalFromBtn(btn) {
+    openModal(
+      btn.dataset.tytul,
+      btn.dataset.wykonawca,
+      btn.dataset.gatunek,
+      btn.dataset.ocena,
+      btn.dataset.spotify,
+      btn.dataset.cardid,
+      btn.dataset.categoryid,
+      btn.dataset.index
+    );
+  }
 
-function openModal(tytul, wykonawca, gatunek, ocena, spotifyUrl, cardId, categoryId) {
-  const overlay = document.getElementById('modal-overlay');
-  const modal = overlay.querySelector('.modal');
+  function openModal(tytul, wykonawca, gatunek, ocena, spotifyUrl, cardId, categoryId, cardIndex) {
+    const overlay = document.getElementById('modal-overlay');
+    const modal = overlay.querySelector('.modal');
 
-  overlay.style.opacity = '0';
-  overlay.style.display = 'flex';
-  modal.style.opacity = '0';
-  modal.style.transform = 'scale(0.92) translateY(16px)';
+    overlay.style.opacity = '0';
+    overlay.style.display = 'flex';
+    modal.style.opacity = '0';
+    modal.style.transform = 'scale(0.92) translateY(16px)';
 
-  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      overlay.style.opacity = '1';
-      modal.style.opacity = '1';
-      modal.style.transform = 'scale(1) translateY(0)';
+      requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+        modal.style.opacity = '1';
+        modal.style.transform = 'scale(1) translateY(0)';
+      });
     });
-  });
 
-  document.getElementById('modal-title').textContent = tytul || wykonawca;
-  document.getElementById('modal-wykonawca').textContent = wykonawca || '—';
-  document.getElementById('modal-ocena').textContent = ocena || '—';
+    document.getElementById('modal-title').textContent = tytul || wykonawca;
+    document.getElementById('modal-wykonawca').textContent = wykonawca || '-';
+    document.getElementById('modal-ocena').textContent = ocena || '-';
+    document.getElementById('modal-playlist-msg').textContent = '';
 
-  const gatunekRow = document.getElementById('modal-gatunek-row');
-  if (gatunek) {
-    document.getElementById('modal-gatunek').textContent = gatunek;
-    gatunekRow.style.display = '';
-  } else {
-    gatunekRow.style.display = 'none';
-  }
+    const gatunekRow = document.getElementById('modal-gatunek-row');
+    if (gatunek) {
+      document.getElementById('modal-gatunek').textContent = gatunek;
+      gatunekRow.style.display = '';
+    } else {
+      gatunekRow.style.display = 'none';
+    }
 
-  const spotifyDiv = document.getElementById('modal-spotify');
-  const spotifyIframe = document.getElementById('modal-spotify-iframe');
-  if (spotifyUrl) {
-    const embedUrl = spotifyUrl
-      .replace('open.spotify.com/', 'open.spotify.com/embed/')
-      .split('?')[0] + '?utm_source=generator';
-    spotifyIframe.src = embedUrl;
-    spotifyDiv.style.display = '';
-  } else {
-    spotifyIframe.src = '';
-    spotifyDiv.style.display = 'none';
-  }
+    const spotifyDiv = document.getElementById('modal-spotify');
+    const spotifyIframe = document.getElementById('modal-spotify-iframe');
+    if (spotifyUrl) {
+      const embedUrl = spotifyUrl
+        .replace('open.spotify.com/', 'open.spotify.com/embed/')
+        .split('?')[0] + '?utm_source=generator';
+      spotifyIframe.src = embedUrl;
+      spotifyDiv.style.display = '';
+    } else {
+      spotifyIframe.src = '';
+      spotifyDiv.style.display = 'none';
+    }
 
-  const actions = document.getElementById('modal-actions');
-  actions.innerHTML = `
+    const playlistsRaw = document.getElementById('playlists-data');
+    const playlists = playlistsRaw ? JSON.parse(playlistsRaw.textContent) : [];
+    const actionsEl = document.getElementById('modal-actions');
+
+    let actionsHtml = '';
+
+    if (playlists.length > 0 && categoryId === 'ulubione-utwory') {
+      actionsHtml += `
+        <div id="modal-playlist-wrapper" class="modal-playlist-wrapper">
+          <span class="modal-playlist-label">Dodaj do playlisty</span>
+          <div class="modal-playlist-row">
+            <select id="modal-playlist-select" class="modal-playlist-select">
+              <option disabled>Ładowanie...</option>
+            </select>
+            <button type="button" onclick="addToPlaylist('${tytul.replace(/'/g, "\\'")}')">Dodaj</button>
+          </div>
+        </div>
+      `;
+
+      fetch(`/playlista/zawiera-utwor?tytul=${encodeURIComponent(tytul)}`)
+        .then(r => r.json())
+        .then(data => {
+          const wrapper = document.getElementById('modal-playlist-wrapper');
+          if (!wrapper) return;
+          const available = data.filter(p => !p.hasSong);
+          if (available.length === 0) {
+            wrapper.remove();
+          } else {
+            const select = document.getElementById('modal-playlist-select');
+            select.innerHTML = available.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+          }
+        })
+        .catch(() => {});
+    }
+
+    actionsHtml += `
+  <div style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
     <a href="/moje_polubione/${categoryId}/edit/${cardId}">
       <button type="button">Edytuj</button>
     </a>
-  `;
+    <form action="/moje_polubione/${categoryId}/delete/${cardIndex}" method="POST">
+      <input type="hidden" name="_csrf" value="${document.querySelector('input[name=_csrf]')?.value || ''}">
+      <button type="submit" class="delete" onclick="return confirm('Czy na pewno chcesz usunąć ten wpis?')">Usuń</button>
+    </form>
+  </div>
+`;
 
-  document.body.style.overflow = 'hidden';
-}
+    actionsEl.innerHTML = actionsHtml;
+    document.body.style.overflow = 'hidden';
+  }
 
-function closeModal() {
-  const overlay = document.getElementById('modal-overlay');
-  const modal = overlay.querySelector('.modal');
+  async function addToPlaylist(songTytul) {
+    const selectEl = document.getElementById('modal-playlist-select');
+    const msgEl = document.getElementById('modal-playlist-msg');
+    if (!selectEl || selectEl.disabled) return;
+    const playlistId = selectEl.value;
+    const csrf = document.querySelector('input[name="_csrf"]')?.value || '';
 
-  overlay.style.opacity = '0';
-  modal.style.opacity = '0';
-  modal.style.transform = 'scale(0.92) translateY(16px)';
+    try {
+      const res = await fetch(`/playlista/${playlistId}/dodaj-utwor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `song_tytul=${encodeURIComponent(songTytul)}&_csrf=${encodeURIComponent(csrf)}`
+      });
 
-  setTimeout(() => {
-    overlay.style.display = 'none';
-    document.getElementById('modal-spotify-iframe').src = '';
-    document.body.style.overflow = '';
-  }, 220);
-}
+      const data = await res.json();
+      if (data.success) {
+        msgEl.style.color = 'var(--accent)';
+        msgEl.textContent = 'Dodano do playlisty!';
+        window._playlistsNeedRefresh = true;
 
+        const selectedOption = selectEl.querySelector(`option[value="${playlistId}"]`);
+        if (selectedOption) selectedOption.remove();
+        if (selectEl.options.length === 0) {
+          const wrapper = document.getElementById('modal-playlist-wrapper');
+          if (wrapper) wrapper.remove();
+        }
+      } else {
+        msgEl.style.color = 'var(--danger)';
+        msgEl.textContent = data.message || 'Błąd - spróbuj ponownie.';
+      }
+    } catch {
+      msgEl.style.color = 'var(--danger)';
+      msgEl.textContent = 'Błąd połączenia.';
+    }
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-});
+    setTimeout(() => { msgEl.textContent = ''; }, 3000);
+  }
+
+  function closeModal() {
+    const overlay = document.getElementById('modal-overlay');
+    const modal = overlay.querySelector('.modal');
+
+    overlay.style.opacity = '0';
+    modal.style.opacity = '0';
+    modal.style.transform = 'scale(0.92) translateY(16px)';
+
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      document.getElementById('modal-spotify-iframe').src = '';
+      document.body.style.overflow = '';
+      if (window._playlistsNeedRefresh) {
+        window._playlistsNeedRefresh = false;
+        window.location.reload();
+      }
+    }, 220);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
 </script>
 
 </body>
 <footer>
   <p>&copy; 2026 Trackly. Wszelkie prawa zastrzeżone.<br><a href="/odkryj_trackly">O projekcie</a> | <a href="/polityka_prywatnosci">Polityka prywatności</a></p>
 </footer>
+
 </html>

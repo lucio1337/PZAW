@@ -150,6 +150,7 @@
               data-ocena="<%= card.ocena %>"
               data-spotify="<%= card.spotify_url || '' %>"
               data-cardid="<%= card.id %>"
+              data-index="<%= index %>"
               data-categoryid="<%= category.id %>"
             >
               <% if (category.requiredFields.includes("tytuł")) { %>
@@ -157,7 +158,7 @@
                   <% if (card.spotify_url) { %>
                     <a href="<%= card.spotify_url %>" target="_blank" rel="noopener" class="spotify-link" onclick="event.stopPropagation()">
                       <img src="/img/spotify.svg" alt="Spotify">
-                      <%= card.tytuł || '-' %>
+                        <span><%= card.tytuł || '-' %></span>
                     </a>
                   <% } else { %>
                     <%= card.tytuł || '-' %>
@@ -169,7 +170,7 @@
                   <% if (card.spotify_url && !category.requiredFields.includes('tytuł')) { %>
                     <a href="<%= card.spotify_url %>" target="_blank" rel="noopener" class="spotify-link" onclick="event.stopPropagation()">
                       <img src="/img/spotify.svg" alt="Spotify">
-                      <%= card.wykonawca || '-' %>
+                        <span><%= card.wykonawca || '-' %></span>
                     </a>
                   <% } else { %>
                     <%= card.wykonawca || '-' %>
@@ -223,7 +224,7 @@
               <tr>
                 <td><%= song.tytuł %></td>
                 <td><%= song.wykonawca %></td>
-                <td><%= song.gatunek || "—" %></td>
+                <td><%= song.gatunek || "-" %></td>
               </tr>
             <% }) %>
           </tbody>
@@ -245,5 +246,7 @@
   <% } %>
 
 </main>
+
+<script id="playlists-data" type="application/json"><%- playlistsJson %></script>
 
 <%- include("foot.partial.ejs") %>
